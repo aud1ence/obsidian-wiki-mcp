@@ -3,6 +3,23 @@
   "version": "0.1.0",
   "description": "MCP server implementing Karpathy's LLM Wiki pattern for Obsidian vaults",
   "type": "module",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "keywords": [
+    "mcp",
+    "obsidian",
+    "wiki",
+    "knowledge-base",
+    "llm",
+    "claude"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aud1ence/obsidian-wiki-mcp"
+  },
   "bin": {
     "obsidian-wiki-mcp": "dist/index.js"
   },
