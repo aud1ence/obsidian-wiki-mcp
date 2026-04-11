@@ -1,0 +1,158 @@
+import fs from "fs";
+import matter from "gray-matter";
+import { z } from "zod";
+import { Config } from "../config.js";
+import { Bm25Index, upsertIndexRow } from "../lib/index_manager.js";
+import { BacklinkIndex } from "../lib/backlink_index.js";
+import {
+  validateVaultPath,
+  writePageSafe,
+  isVaultInitialized,
+  relPath,
+} from "../lib/vault.js";
+import { appendLog } from "../lib/log_manager.js";
+
+export function registerWikiWritePage(
+  server: import("@modelcontextprotocol/sdk/server/mcp.js").McpServer,
+  ctx: { config: Config; bm25Index: Bm25Index; backlinkIndex: BacklinkIndex }
+) {
+  server.registerTool(
+    "wiki_write_page",
+    {
+      description: "Ghi page vào vault. Host LLM gọi sau khi đã quyết định nội dung.",
+      inputSchema: {
+        path: z.string().describe("Relative path trong vault, ví dụ: _wiki/infra/redis-oom.md"),
+        content: z.string().describe("Markdown content (bao gồm YAML frontmatter)"),
+        source: z.string().describe("Nguồn gốc: claude-session-X, kiro-session-X, manual"),
+      },
+    },
+    async (args) => {
+      const vaultPath = ctx.config.vaultPath;
+
+      if (!isVaultInitialized(vaultPath)) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({
+                status: "error",
+                code: "VAULT_NOT_INIT",
+                message: "Vault chưa được khởi tạo. Gọi wiki_init() trước.",
+              }),
+            },
+          ],
+        };
+      }
+
+      let absPath: string;
+      try {
+        absPath = validateVaultPath(args.path, vaultPath);
+      } catch (e: unknown) {
+        const err = e as { code: string; message: string };
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({
+                status: "error",
+                code: err.code,
+                message: err.message,
+              }),
+            },
+          ],
+        };
+      }
+
+      const isNew = !fs.existsSync(absPath);
+
+      let parsed: matter.GrayMatterFile<string>;
+      try {
+        parsed = matter(args.content);
+      } catch {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({
+                status: "error",
+                code: "INVALID_FRONTMATTER",
+                message: "Content không parse được frontmatter",
+              }),
+            },
+          ],
+        };
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      const fm = parsed.data as Record<string, unknown>;
+      if (!fm.last_modified) fm.last_modified = today;
+      if (!fm.source) fm.source = args.source;
+
+      const finalContent = matter.stringify(parsed.content, fm);
+
+      try {
+        await writePageSafe(
+          absPath,
+          finalContent,
+          ctx.config.lockTimeoutMs,
+          ctx.config.staleLockTtlMs
+        );
+      } catch (e: unknown) {
+        const err = e as { code: string; message: string };
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({
+                status: "error",
+                code: err.code ?? "WRITE_ERROR",
+                message: err.message,
+              }),
+            },
+          ],
+        };
+      }
+
+      const rel = relPath(absPath, vaultPath);
+      const indexRow = {
+        path: rel,
+        tldr: (fm.tldr as string) ?? "",
+        tags: Array.isArray(fm.tags)
+          ? (fm.tags as string[]).join(",")
+          : (fm.tags as string) ?? "",
+        last_modified: (fm.last_modified as string) ?? today,
+      };
+
+      ctx.bm25Index.removeDoc(rel);
+      ctx.bm25Index.addDoc(indexRow);
+      upsertIndexRow(vaultPath, indexRow);
+      ctx.backlinkIndex.addPage(rel, finalContent);
+
+      appendLog(vaultPath, {
+        timestamp: new Date().toISOString(),
+        operation: "write",
+        source: args.source,
+        metadata: {
+          [isNew ? "added" : "modified"]: `[${rel}]`,
+        },
+      });
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                status: "success",
+                action: isNew ? "created" : "updated",
+                path: rel,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+}

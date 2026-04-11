@@ -1,0 +1,24 @@
+{
+  "name": "obsidian-wiki-mcp",
+  "version": "0.1.0",
+  "description": "MCP server implementing Karpathy's LLM Wiki pattern for Obsidian vaults",
+  "type": "module",
+  "bin": {
+    "obsidian-wiki-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "node test/runner.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "tsx": "^4.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

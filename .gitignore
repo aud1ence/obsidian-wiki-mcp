@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output — included in repo since this is a CLI/MCP tool distributed via npm
+# dist/
+
+# Environment & secrets
+.env
+.env.*
+
+# OS & editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript incremental build cache
+*.tsbuildinfo
