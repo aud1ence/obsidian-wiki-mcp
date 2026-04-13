@@ -5,6 +5,8 @@ import { registerWikiQuery } from "./wiki_query.js";
 import { registerWikiReadPage } from "./wiki_read_page.js";
 import { registerWikiLintScan } from "./wiki_lint_scan.js";
 import { registerWikiApplyFix } from "./wiki_apply_fix.js";
+import { registerWikiReindex } from "./wiki_reindex.js";
+import { registerWikiImport } from "./wiki_import.js";
 export function registerTools(server, ctx) {
     registerWikiInit(server, ctx);
     registerWikiIngest(server, ctx);
@@ -13,5 +15,7 @@ export function registerTools(server, ctx) {
     registerWikiReadPage(server, ctx);
     registerWikiLintScan(server, ctx);
     registerWikiApplyFix(server, ctx);
+    registerWikiReindex(server, ctx);
+    registerWikiImport(server, ctx);
 }
 //# sourceMappingURL=index.js.map

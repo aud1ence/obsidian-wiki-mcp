@@ -1,6 +1,6 @@
 export interface LogEntry {
     timestamp: string;
-    operation: "ingest" | "query" | "write" | "lint" | "init" | "fix";
+    operation: "ingest" | "query" | "write" | "lint" | "init" | "fix" | "reindex";
     source?: string;
     metadata: Record<string, unknown>;
 }

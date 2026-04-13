@@ -9,6 +9,8 @@ import { registerWikiQuery } from "./wiki_query.js";
 import { registerWikiReadPage } from "./wiki_read_page.js";
 import { registerWikiLintScan } from "./wiki_lint_scan.js";
 import { registerWikiApplyFix } from "./wiki_apply_fix.js";
+import { registerWikiReindex } from "./wiki_reindex.js";
+import { registerWikiImport } from "./wiki_import.js";
 
 export interface ToolContext {
   config: Config;
@@ -24,4 +26,6 @@ export function registerTools(server: McpServer, ctx: ToolContext): void {
   registerWikiReadPage(server, ctx);
   registerWikiLintScan(server, ctx);
   registerWikiApplyFix(server, ctx);
+  registerWikiReindex(server, ctx);
+  registerWikiImport(server, ctx);
 }
