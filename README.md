@@ -31,6 +31,41 @@ Solves **document drift** — your vault stays up-to-date as knowledge evolves a
 claude mcp add obsidian-wiki -- npx -y obsidian-wiki-mcp --vault "/path/to/your/vault"
 ```
 
+### Option 2: JSON config file (`~/.claude.json`)
+
+Add directly to `~/.claude.json` under the `mcpServers` key of the relevant project:
+
+```json
+{
+  "projects": {
+    "/path/to/your/project": {
+      "mcpServers": {
+        "obsidian-wiki": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["-y", "obsidian-wiki-mcp", "--vault", "/path/to/your/vault"]
+        }
+      }
+    }
+  }
+}
+```
+
+To apply globally (all projects), add under the top-level `mcpServers` key instead:
+
+```json
+{
+  "mcpServers": {
+    "obsidian-wiki": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "obsidian-wiki-mcp", "--vault", "/path/to/your/vault"]
+    }
+  }
+}
+```
+
+> **Note:** If your vault path contains spaces, keep it as a single element in the `args` array — do not split it across multiple entries.
 
 ---
 
