@@ -11,10 +11,10 @@ import fs from "fs";
 async function main() {
   const config = resolveConfig();
 
-  // Validate vault path tồn tại
+  // Validate vault path exists
   if (!fs.existsSync(config.vaultPath)) {
     console.error(
-      `[obsidian-wiki-mcp] ERROR: Vault path không tồn tại: ${config.vaultPath}`
+      `[obsidian-wiki-mcp] ERROR: Vault path does not exist: ${config.vaultPath}`
     );
     process.exit(1);
   }
@@ -24,7 +24,7 @@ async function main() {
     fs.accessSync(config.vaultPath, fs.constants.R_OK | fs.constants.W_OK);
   } catch {
     console.error(
-      `[obsidian-wiki-mcp] ERROR: Không có quyền đọc/ghi vault: ${config.vaultPath}`
+      `[obsidian-wiki-mcp] ERROR: No read/write permissions for vault: ${config.vaultPath}`
     );
     process.exit(1);
   }
@@ -33,7 +33,7 @@ async function main() {
   const vaultInit = isVaultInitialized(config.vaultPath);
   if (!vaultInit) {
     console.error(
-      `[obsidian-wiki-mcp] WARN: Vault chưa được khởi tạo (không có _schema.md). Chạy wiki_init() để khởi tạo.`
+      `[obsidian-wiki-mcp] WARN: Vault not initialized (missing _schema.md). Run wiki_init() to initialize.`
     );
   }
 

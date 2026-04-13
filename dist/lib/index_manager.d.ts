@@ -19,11 +19,11 @@ export interface Bm25Index {
 export declare function parseIndexFile(content: string): IndexRow[];
 /** Serialize rows → Markdown table */
 export declare function serializeIndex(rows: IndexRow[]): string;
-/** Ghi _index.md */
+/** Write _index.md */
 export declare function writeIndexFile(vaultPath: string, rows: IndexRow[]): void;
-/** Đọc rows từ _index.md */
+/** Read rows from _index.md */
 export declare function readIndexRows(vaultPath: string): IndexRow[];
-/** Update hoặc thêm một row trong _index.md */
+/** Update or add a row in _index.md */
 export declare function upsertIndexRow(vaultPath: string, newRow: IndexRow): void;
-/** Build in-memory BM25 index từ rows */
+/** Build in-memory BM25 index from rows */
 export declare function buildBm25Index(vaultPath: string): Promise<Bm25Index>;

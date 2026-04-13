@@ -8,6 +8,6 @@ export interface BacklinkIndex {
     addPage(pageRelPath: string, content: string): void;
     removePage(pageRelPath: string): void;
 }
-/** Extract [[wikilinks]] từ content */
+/** Extract [[wikilinks]] from content */
 export declare function extractWikiLinks(content: string): string[];
 export declare function buildBacklinkIndex(vaultPath: string): Promise<BacklinkIndex>;

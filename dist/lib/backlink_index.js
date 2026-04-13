@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { listWikiPages, relPath } from "./vault.js";
-/** Extract [[wikilinks]] từ content */
+/** Extract [[wikilinks]] from content */
 export function extractWikiLinks(content) {
     const links = [];
     const regex = /\[\[([^\]|#]+)(?:#[^\]|]*)?\|?[^\]]*\]\]/g;
@@ -75,13 +75,13 @@ export async function buildBacklinkIndex(vaultPath) {
     };
 }
 /**
- * Normalize [[link]] sang relative path trong vault.
- * Hỗ trợ: bare name, path với /, kebab/normal casing.
+ * Normalize [[link]] to relative path in the vault.
+ * Supports: bare name, path with /, kebab/normal casing.
  */
 function normalizeLink(link, fromPage, vaultPath) {
-    // Thêm .md nếu chưa có
+    // Add .md if not already present
     const withExt = link.endsWith(".md") ? link : link + ".md";
-    // Tìm file trong vault
+    // Find file in the vault
     const candidates = [
         withExt,
         `_wiki/${withExt}`,
@@ -93,7 +93,7 @@ function normalizeLink(link, fromPage, vaultPath) {
             return relPath(abs, vaultPath);
         }
     }
-    // Trả về normalized path dù file chưa tồn tại (để detect broken links)
+    // Return normalized path even if file doesn't exist (to detect broken links)
     return withExt;
 }
 //# sourceMappingURL=backlink_index.js.map

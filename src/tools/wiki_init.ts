@@ -16,19 +16,19 @@ _wiki/          ← LLM-maintained pages, organized by topic
   ops/          ← incidents, runbooks, troubleshooting
   concepts/     ← technical concepts, architecture
   projects/     ← per-project knowledge
-_sources/       ← raw immutable inputs (paste vào đây, không edit)
-_schema.md      ← file này — đọc trước khi làm bất cứ điều gì
-_log.md         ← append-only, KHÔNG edit thủ công
-_index.md       ← catalog tự động, KHÔNG edit thủ công
+_sources/       ← raw immutable inputs (paste here, do not edit)
+_schema.md      ← this file — read before doing anything
+_log.md         ← append-only, DO NOT edit manually
+_index.md       ← auto-catalog, DO NOT edit manually
 \`\`\`
 
-## Page Format (bắt buộc)
+## Page Format (Mandatory)
 
-Mỗi page trong _wiki/ phải có cấu trúc:
+Each page in _wiki/ must have the following structure:
 
 \`\`\`markdown
 ---
-tldr: "<1 câu, ≤ 100 tokens, plain text>"
+tldr: "<1 sentence, ≤ 100 tokens, plain text>"
 tags: [tag1, tag2]
 related: ["[[path/to/page]]"]
 last_modified: "YYYY-MM-DD"
@@ -39,13 +39,13 @@ source: "claude-session-X | kiro-session-X | manual"
 
 ## TL;DR
 
-<Tóm tắt ngắn, 2-4 câu. Đây là tầng shallow.>
+<Short summary, 2-4 sentences. This is the shallow layer.>
 
 ---
 
 ## Detail
 
-<Nội dung đầy đủ: nguyên nhân, steps, examples, references.>
+<Full content: cause, steps, examples, references.>
 \`\`\`
 
 ## Tag Taxonomy
@@ -57,32 +57,32 @@ Scope: server-35, server-pbx1, prod, staging
 
 ## Ingest Rules
 
-1. Tìm ≤ 5 pages liên quan nhất qua wiki_query trước
-2. Quyết định: cập nhật page cũ hay tạo page mới?
-3. Luôn cập nhật related links 2 chiều
-4. Cập nhật _index.md sau khi ghi
+1. Find ≤ 5 most relevant pages via wiki_query first
+2. Decide: update existing page or create a new one?
+3. Always update related links bidirectionally
+4. Update _index.md after writing
 
 ## Lint Rules
 
-- ORPHAN: page không có backlink sau 7 ngày
-- MISSING_TLDR: page không có ## TL;DR section
-- STALE: last_modified > 90 ngày và dirty = true
-- BROKEN_LINK: [[link]] trỏ đến page không tồn tại
+- ORPHAN: page with no backlinks after 7 days
+- MISSING_TLDR: page missing ## TL;DR section
+- STALE: last_modified > 90 days and dirty = true
+- BROKEN_LINK: [[link]] pointing to a non-existent page
 
 ## Naming Convention
 
-- Dùng kebab-case: redis-oom.md, server-35-setup.md
+- Use kebab-case: redis-oom.md, server-35-setup.md
 - Incident pages: ops/incident-YYYY-MM-DD-<slug>.md
 `;
 
 const LOG_CONTENT = `# Wiki Change Log
 
-<!-- File này do MCP tự động quản lý. KHÔNG edit thủ công. -->
+<!-- This file is automatically managed by MCP. DO NOT edit manually. -->
 `;
 
 const INDEX_CONTENT = `# Wiki Index
 
-<!-- File này do MCP tự động quản lý. KHÔNG edit thủ công. -->
+<!-- This file is automatically managed by MCP. DO NOT edit manually. -->
 
 | path | tldr | tags | last_modified |
 |------|------|------|---------------|
@@ -95,10 +95,10 @@ export function registerWikiInit(
   server.registerTool(
     "wiki_init",
     {
-      description: "Khởi tạo vault: tạo _schema.md, _log.md, _index.md và cấu trúc thư mục",
+      description: "Initialize vault: create _schema.md, _log.md, _index.md and directory structure",
       inputSchema: {
         vault_path: z.string().optional().describe(
-          "Path tới Obsidian vault (override config nếu cần). Để trống để dùng config mặc định."
+          "Path to Obsidian vault (override config if needed). Leave empty to use default config."
         ),
       },
     },
@@ -155,7 +155,7 @@ export function registerWikiInit(
                 existing_pages_found: existingPages.length,
                 migrated: 0,
                 message: alreadyInit
-                  ? "Vault đã được init trước đó. Run wiki_lint_scan() để kiểm tra vault health."
+                  ? "Vault already initialized. Run wiki_lint_scan() to check vault health."
                   : "Vault initialized. Run wiki_lint_scan() to check vault health.",
               },
               null,

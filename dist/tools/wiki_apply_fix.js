@@ -8,10 +8,10 @@ import { appendLog } from "../lib/log_manager.js";
 import { lastLintIssues } from "./wiki_lint_scan.js";
 export function registerWikiApplyFix(server, ctx) {
     server.registerTool("wiki_apply_fix", {
-        description: "Apply fix cho issue được detect bởi wiki_lint_scan",
+        description: "Apply fix for issues detected by wiki_lint_scan",
         inputSchema: {
-            issue_id: z.string().describe("ID của issue từ wiki_lint_scan, ví dụ: issue-001"),
-            resolution: z.string().optional().describe("Resolution cho issue cần clarification. Ví dụ: 'remove' để xóa broken links"),
+            issue_id: z.string().describe("ID of the issue from wiki_lint_scan, e.g., issue-001"),
+            resolution: z.string().optional().describe("Resolution for issues requiring clarification. E.g., 'remove' to delete broken links"),
         },
     }, async (args) => {
         const vaultPath = ctx.config.vaultPath;
@@ -24,7 +24,7 @@ export function registerWikiApplyFix(server, ctx) {
                         text: JSON.stringify({
                             status: "error",
                             code: "ISSUE_NOT_FOUND",
-                            message: `Issue ${args.issue_id} không tìm thấy. Gọi wiki_lint_scan() trước.`,
+                            message: `Issue ${args.issue_id} not found. Call wiki_lint_scan() first.`,
                         }),
                     },
                 ],
@@ -47,7 +47,7 @@ export function registerWikiApplyFix(server, ctx) {
                             text: JSON.stringify({
                                 status: "error",
                                 code: "UNKNOWN_ISSUE_TYPE",
-                                message: `Issue type không được hỗ trợ: ${issue.type}`,
+                                message: `Issue type not supported: ${issue.type}`,
                             }),
                         },
                     ],
@@ -63,7 +63,7 @@ function handleOrphan(issue) {
                 text: JSON.stringify({
                     status: "needs_clarification",
                     issue_id: issue.id,
-                    question: `Page ${issue.pages[0]} không có backlink. Merge vào page nào, hoặc thêm [[${issue.pages[0]}]] vào page liên quan?`,
+                    question: `Page ${issue.pages[0]} has no backlinks. Which page should it be merged into, or should [[${issue.pages[0]}]] be added to a related page?`,
                 }),
             },
         ],
@@ -80,7 +80,7 @@ function handleMissingTldr(issue, vaultPath) {
                     text: JSON.stringify({
                         status: "error",
                         code: "PAGE_NOT_FOUND",
-                        message: `Page không còn tồn tại: ${pagePath}`,
+                        message: `Page no longer exists: ${pagePath}`,
                     }),
                 },
             ],
@@ -124,7 +124,7 @@ async function handleStale(issue, vaultPath, ctx) {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify({ status: "error", code: "PAGE_NOT_FOUND", message: `Page không tồn tại: ${pagePath}` }),
+                    text: JSON.stringify({ status: "error", code: "PAGE_NOT_FOUND", message: `Page does not exist: ${pagePath}` }),
                 },
             ],
         };
@@ -196,7 +196,7 @@ async function handleBrokenLink(issue, vaultPath, resolution, ctx) {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify({ status: "error", code: "PAGE_NOT_FOUND", message: `Page không tồn tại: ${pagePath}` }),
+                    text: JSON.stringify({ status: "error", code: "PAGE_NOT_FOUND", message: `Page does not exist: ${pagePath}` }),
                 },
             ],
         };
@@ -209,7 +209,7 @@ async function handleBrokenLink(issue, vaultPath, resolution, ctx) {
                     text: JSON.stringify({
                         status: "needs_clarification",
                         issue_id: issue.id,
-                        question: `Page ${pagePath} có broken links: ${issue.detail}. Xóa links (resolution: 'remove') hay tạo lại pages bị thiếu?`,
+                        question: `Page ${pagePath} has broken links: ${issue.detail}. Remove links (resolution: 'remove') or recreate missing pages?`,
                     }),
                 },
             ],
@@ -260,7 +260,7 @@ async function handleBrokenLink(issue, vaultPath, resolution, ctx) {
                 text: JSON.stringify({
                     status: "needs_clarification",
                     issue_id: issue.id,
-                    question: `Resolution '${resolution}' không được hỗ trợ. Dùng 'remove' để xóa broken links.`,
+                    question: `Resolution '${resolution}' is not supported. Use 'remove' to delete broken links.`,
                 }),
             },
         ],

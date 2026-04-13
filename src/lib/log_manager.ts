@@ -27,9 +27,9 @@ export function appendLog(vaultPath: string, entry: LogEntry): void {
   }
   lines += "\n";
 
-  // Đảm bảo có header cho ngày hôm nay
+  // Ensure there is a header for today
   if (!fs.existsSync(logPath)) {
-    fs.writeFileSync(logPath, "# Wiki Change Log\n\n<!-- File này do MCP tự động quản lý. KHÔNG edit thủ công. -->\n\n");
+    fs.writeFileSync(logPath, "# Wiki Change Log\n\n<!-- This file is automatically managed by MCP. DO NOT edit manually. -->\n\n");
   }
 
   const content = fs.readFileSync(logPath, "utf-8");

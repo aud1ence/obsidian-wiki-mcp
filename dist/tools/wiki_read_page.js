@@ -5,10 +5,10 @@ import { z } from "zod";
 import { validateVaultPath } from "../lib/vault.js";
 export function registerWikiReadPage(server, ctx) {
     server.registerTool("wiki_read_page", {
-        description: "Đọc một page trong vault. depth='shallow' chỉ trả TL;DR, depth='full' trả toàn bộ content.",
+        description: "Read a page in the vault. depth='shallow' returns only TL;DR, depth='full' returns the entire content.",
         inputSchema: {
-            path: z.string().describe("Relative path trong vault, ví dụ: _wiki/infra/redis-oom.md"),
-            depth: z.enum(["shallow", "full"]).describe("'shallow' để đọc TL;DR, 'full' để đọc toàn bộ content"),
+            path: z.string().describe("Relative path in the vault, e.g., _wiki/infra/redis-oom.md"),
+            depth: z.enum(["shallow", "full"]).describe("'shallow' to read TL;DR, 'full' to read the entire content"),
         },
     }, async (args) => {
         const vaultPath = ctx.config.vaultPath;
@@ -39,7 +39,7 @@ export function registerWikiReadPage(server, ctx) {
                         text: JSON.stringify({
                             status: "error",
                             code: "PAGE_NOT_FOUND",
-                            message: `Page không tồn tại: ${args.path}`,
+                            message: `Page does not exist: ${args.path}`,
                         }),
                     },
                 ],

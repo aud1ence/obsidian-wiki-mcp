@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-/** Validate path nằm trong vault, chống path traversal */
+/** Validate path is within vault, prevent path traversal */
 export function validateVaultPath(
   userPath: string,
   vaultPath: string
@@ -11,13 +11,13 @@ export function validateVaultPath(
   if (!abs.startsWith(vaultAbs + path.sep) && abs !== vaultAbs) {
     throw {
       code: "PATH_TRAVERSAL",
-      message: `Path "${userPath}" nằm ngoài vault`,
+      message: `Path "${userPath}" is outside vault`,
     };
   }
   return abs;
 }
 
-/** Ghi file an toàn với lockfile + timeout */
+/** Write file safely with lockfile + timeout */
 export async function writePageSafe(
   absPath: string,
   content: string,
@@ -35,19 +35,19 @@ export async function writePageSafe(
     }
   }
 
-  // Chờ lock tối đa lockTimeoutMs
+  // Wait for lock up to lockTimeoutMs
   const deadline = Date.now() + lockTimeoutMs;
   while (fs.existsSync(lockPath)) {
     if (Date.now() > deadline) {
       throw {
         code: "LOCK_TIMEOUT",
-        message: "Page đang được ghi bởi tool khác. Thử lại sau.",
+        message: "Page is being written by another tool. Try again later.",
       };
     }
     await sleep(100);
   }
 
-  // Acquire → ghi → release
+  // Acquire → write → release
   fs.writeFileSync(lockPath, String(Date.now()));
   try {
     fs.mkdirSync(path.dirname(absPath), { recursive: true });
@@ -57,7 +57,7 @@ export async function writePageSafe(
   }
 }
 
-/** Xóa tất cả stale locks trong vault */
+/** Delete all stale locks in the vault */
 export function cleanupStaleLocks(
   vaultPath: string,
   staleLockTtlMs = 30000
@@ -80,18 +80,18 @@ export function cleanupStaleLocks(
   cleanup(vaultPath);
 }
 
-/** Kiểm tra vault đã init chưa */
+/** Check if vault is initialized */
 export function isVaultInitialized(vaultPath: string): boolean {
   return fs.existsSync(path.join(vaultPath, "_schema.md"));
 }
 
-/** Đọc file trong vault, trả null nếu không tồn tại */
+/** Read file in vault, return null if not exists */
 export function readFile(absPath: string): string | null {
   if (!fs.existsSync(absPath)) return null;
   return fs.readFileSync(absPath, "utf-8");
 }
 
-/** List tất cả .md files trong _wiki/ */
+/** List all .md files in _wiki/ */
 export function listWikiPages(vaultPath: string): string[] {
   const wikiDir = path.join(vaultPath, "_wiki");
   if (!fs.existsSync(wikiDir)) return [];
@@ -110,7 +110,7 @@ export function listWikiPages(vaultPath: string): string[] {
   return results;
 }
 
-/** Relative path từ vault root */
+/** Relative path from vault root */
 export function relPath(absPath: string, vaultPath: string): string {
   return path.relative(vaultPath, absPath);
 }

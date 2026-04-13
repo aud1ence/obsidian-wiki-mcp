@@ -49,13 +49,13 @@ export function serializeIndex(rows) {
 function escapeMd(s) {
     return s.replace(/\|/g, "\\|");
 }
-/** Ghi _index.md */
+/** Write _index.md */
 export function writeIndexFile(vaultPath, rows) {
     const indexPath = path.join(vaultPath, "_index.md");
-    const content = `# Wiki Index\n\n<!-- File này do MCP tự động quản lý. KHÔNG edit thủ công. -->\n\n${serializeIndex(rows)}`;
+    const content = `# Wiki Index\n\n<!-- This file is automatically managed by MCP. DO NOT edit manually. -->\n\n${serializeIndex(rows)}`;
     fs.writeFileSync(indexPath, content, "utf-8");
 }
-/** Đọc rows từ _index.md */
+/** Read rows from _index.md */
 export function readIndexRows(vaultPath) {
     const indexPath = path.join(vaultPath, "_index.md");
     if (!fs.existsSync(indexPath))
@@ -63,7 +63,7 @@ export function readIndexRows(vaultPath) {
     const content = fs.readFileSync(indexPath, "utf-8");
     return parseIndexFile(content);
 }
-/** Update hoặc thêm một row trong _index.md */
+/** Update or add a row in _index.md */
 export function upsertIndexRow(vaultPath, newRow) {
     const rows = readIndexRows(vaultPath);
     const idx = rows.findIndex((r) => r.path === newRow.path);
@@ -75,11 +75,11 @@ export function upsertIndexRow(vaultPath, newRow) {
     }
     writeIndexFile(vaultPath, rows);
 }
-/** Build in-memory BM25 index từ rows */
+/** Build in-memory BM25 index from rows */
 export async function buildBm25Index(vaultPath) {
     const rows = readIndexRows(vaultPath);
-    // Simple TF-IDF / BM25 implementation (không dùng wink do ESM compatibility issues)
-    // Dùng simple keyword scoring thay thế
+    // Simple TF-IDF / BM25 implementation (not using wink due to ESM compatibility issues)
+    // Using simple keyword scoring instead
     return createSimpleBm25(rows);
 }
 function tokenize(text) {
@@ -94,8 +94,7 @@ const STOPWORDS = new Set([
     "have", "has", "had", "do", "does", "did", "will", "would", "could",
     "should", "may", "might", "shall", "can", "that", "this", "these",
     "those", "i", "you", "he", "she", "it", "we", "they", "what", "which",
-    "who", "how", "when", "where", "why", "và", "của", "là", "có", "cho",
-    "với", "trong", "không", "được", "đã", "các", "một", "để", "từ",
+    "who", "how", "when", "where", "why",
 ]);
 function getTerms(text) {
     return tokenize(text).filter((t) => !STOPWORDS.has(t));

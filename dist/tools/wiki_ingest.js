@@ -39,11 +39,11 @@ function getSchemaExcerpt(vaultPath) {
 }
 export function registerWikiIngest(server, ctx) {
     server.registerTool("wiki_ingest", {
-        description: "Nhận raw content từ session, tìm pages liên quan, trả context cho host LLM quyết định action",
+        description: "Receive raw content from session, find relevant pages, return context for host LLM to decide on action",
         inputSchema: {
-            content: z.string().describe("Raw content cần ingest (conversation, log, note, ...)"),
-            source: z.string().describe("Nguồn gốc content: claude-session-X, kiro-session-X, manual, ..."),
-            tags: z.array(z.string()).optional().describe("Tags gợi ý (optional)"),
+            content: z.string().describe("Raw content to ingest (conversation, log, note, ...)"),
+            source: z.string().describe("Source of content: claude-session-X, kiro-session-X, manual, ..."),
+            tags: z.array(z.string()).optional().describe("Suggested tags (optional)"),
         },
     }, async (args) => {
         const { content, source, tags = [] } = args;
@@ -56,7 +56,7 @@ export function registerWikiIngest(server, ctx) {
                         text: JSON.stringify({
                             status: "error",
                             code: "VAULT_NOT_INIT",
-                            message: "Vault chưa được khởi tạo. Gọi wiki_init() trước.",
+                            message: "Vault not initialized. Call wiki_init() first.",
                         }),
                     },
                 ],
@@ -101,7 +101,7 @@ export function registerWikiIngest(server, ctx) {
         };
         if (isMultiChunk) {
             response.chunks = chunks.length;
-            response.chunk_note = `Content được chia thành ${chunks.length} chunks. Đây là context cho chunk 1/${chunks.length}.`;
+            response.chunk_note = `Content divided into ${chunks.length} chunks. This is context for chunk 1/${chunks.length}.`;
             response.remaining_chunks = chunks.slice(1);
         }
         return {

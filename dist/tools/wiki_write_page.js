@@ -6,11 +6,11 @@ import { validateVaultPath, writePageSafe, isVaultInitialized, relPath, } from "
 import { appendLog } from "../lib/log_manager.js";
 export function registerWikiWritePage(server, ctx) {
     server.registerTool("wiki_write_page", {
-        description: "Ghi page vào vault. Host LLM gọi sau khi đã quyết định nội dung.",
+        description: "Write a page to the vault. Host LLM calls this after deciding on the content.",
         inputSchema: {
-            path: z.string().describe("Relative path trong vault, ví dụ: _wiki/infra/redis-oom.md"),
-            content: z.string().describe("Markdown content (bao gồm YAML frontmatter)"),
-            source: z.string().describe("Nguồn gốc: claude-session-X, kiro-session-X, manual"),
+            path: z.string().describe("Relative path in the vault, e.g., _wiki/infra/redis-oom.md"),
+            content: z.string().describe("Markdown content (including YAML frontmatter)"),
+            source: z.string().describe("Source: claude-session-X, kiro-session-X, manual"),
         },
     }, async (args) => {
         const vaultPath = ctx.config.vaultPath;
@@ -22,7 +22,7 @@ export function registerWikiWritePage(server, ctx) {
                         text: JSON.stringify({
                             status: "error",
                             code: "VAULT_NOT_INIT",
-                            message: "Vault chưa được khởi tạo. Gọi wiki_init() trước.",
+                            message: "Vault not initialized. Call wiki_init() first.",
                         }),
                     },
                 ],
@@ -60,7 +60,7 @@ export function registerWikiWritePage(server, ctx) {
                         text: JSON.stringify({
                             status: "error",
                             code: "INVALID_FRONTMATTER",
-                            message: "Content không parse được frontmatter",
+                            message: "Could not parse frontmatter from content",
                         }),
                     },
                 ],

@@ -23,7 +23,7 @@ function daysSince(dateStr) {
 export let lastLintIssues = [];
 export function registerWikiLintScan(server, ctx) {
     server.registerTool("wiki_lint_scan", {
-        description: "Quét vault phát hiện vấn đề cấu trúc: orphan pages, missing TL;DR, stale pages, broken links",
+        description: "Scan vault to detect structural issues: orphan pages, missing TL;DR, stale pages, broken links",
     }, async () => {
         const vaultPath = ctx.config.vaultPath;
         if (!isVaultInitialized(vaultPath)) {
@@ -34,7 +34,7 @@ export function registerWikiLintScan(server, ctx) {
                         text: JSON.stringify({
                             status: "error",
                             code: "VAULT_NOT_INIT",
-                            message: "Vault chưa được khởi tạo. Gọi wiki_init() trước.",
+                            message: "Vault not initialized. Call wiki_init() first.",
                         }),
                     },
                 ],
@@ -63,8 +63,8 @@ export function registerWikiLintScan(server, ctx) {
                     type: "ORPHAN",
                     severity: SEVERITY.ORPHAN,
                     pages: [rel],
-                    detail: `Không có backlink sau ${mtimeAge} ngày`,
-                    suggested_action: `Gọi wiki_apply_fix('${id}') hoặc thêm backlink từ page khác`,
+                    detail: `No backlinks after ${mtimeAge} days`,
+                    suggested_action: `Call wiki_apply_fix('${id}') or add backlinks from other pages`,
                 });
             }
             // MISSING_TLDR
@@ -75,8 +75,8 @@ export function registerWikiLintScan(server, ctx) {
                     type: "MISSING_TLDR",
                     severity: SEVERITY.MISSING_TLDR,
                     pages: [rel],
-                    detail: "Page không có section ## TL;DR",
-                    suggested_action: `Gọi wiki_apply_fix('${id}') để server trả content, rồi thêm TL;DR và gọi wiki_write_page`,
+                    detail: "Page missing ## TL;DR section",
+                    suggested_action: `Call wiki_apply_fix('${id}') to get content, then add TL;DR and call wiki_write_page`,
                 });
             }
             // STALE
@@ -91,8 +91,8 @@ export function registerWikiLintScan(server, ctx) {
                         type: "STALE",
                         severity: SEVERITY.STALE,
                         pages: [rel],
-                        detail: `last_modified=${lastMod}, dirty=true, ${age} ngày chưa cập nhật`,
-                        suggested_action: `Gọi wiki_apply_fix('${id}') để acknowledge (set dirty=false)`,
+                        detail: `last_modified=${lastMod}, dirty=true, ${age} days without updates`,
+                        suggested_action: `Call wiki_apply_fix('${id}') to acknowledge (set dirty=false)`,
                     });
                 }
             }
@@ -121,11 +121,11 @@ export function registerWikiLintScan(server, ctx) {
                     severity: SEVERITY.BROKEN_LINK,
                     pages: [rel],
                     detail: `Broken links: ${brokenLinks.join(", ")}`,
-                    suggested_action: `Gọi wiki_apply_fix('${id}') để xóa hoặc redirect broken links`,
+                    suggested_action: `Call wiki_apply_fix('${id}') to remove or redirect broken links`,
                 });
             }
         }
-        // Lưu issues để wiki_apply_fix dùng
+        // Store issues for wiki_apply_fix to use
         lastLintIssues = issues;
         appendLog(vaultPath, {
             timestamp: new Date().toISOString(),

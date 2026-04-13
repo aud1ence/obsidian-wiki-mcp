@@ -1,6 +1,6 @@
 /**
- * Test runner đơn giản — không cần Jest/Mocha.
- * Chạy: node test/runner.js
+ * Simple test runner — no Jest/Mocha needed.
+ * Run: node test/runner.js
  */
 import { McpTestClient } from "./mcp-client.js";
 import fs from "fs";
@@ -58,7 +58,7 @@ function freshVaultPath() {
 
 function cleanVault(vaultPath) {
   if (!fs.existsSync(vaultPath)) return;
-  // Xóa từng file/dir thủ công
+  // Manually delete each file/dir
   const removeDir = (dir) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
@@ -85,7 +85,7 @@ dirty: ${dirty}
 source: "test"
 ---
 
-${hasTldrSection ? `## TL;DR\n\n${tldr}\n\n---\n\n## Detail\n\nNội dung chi tiết.\n${brokenLinksText}` : `## Detail\n\nNội dung không có TL;DR.\n${brokenLinksText}`}
+${hasTldrSection ? `## TL;DR\n\n${tldr}\n\n---\n\n## Detail\n\nDetailed content.\n${brokenLinksText}` : `## Detail\n\nContent without TL;DR.\n${brokenLinksText}`}
 `;
 }
 
@@ -104,21 +104,21 @@ async function runSuite1_WikiInit() {
     assert(res.created.includes("_schema.md"), "created includes _schema.md");
     assert(res.created.includes("_log.md"), "created includes _log.md");
     assert(res.created.includes("_index.md"), "created includes _index.md");
-    assert(fs.existsSync(path.join(vaultPath, "_schema.md")), "_schema.md tồn tại");
+    assert(fs.existsSync(path.join(vaultPath, "_schema.md")), "_schema.md exists");
   });
 
-  await test("init lần 2 → already_initialized", async () => {
+  await test("init 2nd time → already_initialized", async () => {
     const res = await client.call("wiki_init", {});
     assertEquals(res.status, "already_initialized", "status");
-    // Files không bị ghi đè
-    assert(fs.existsSync(path.join(vaultPath, "_schema.md")), "_schema.md vẫn tồn tại");
+    // Files are not overwritten
+    assert(fs.existsSync(path.join(vaultPath, "_schema.md")), "_schema.md still exists");
   });
 
-  await test("_wiki/ subdirs đã được tạo", async () => {
+  await test("_wiki/ subdirs were created", async () => {
     for (const dir of ["infra", "ops", "concepts", "projects"]) {
       assert(
         fs.existsSync(path.join(vaultPath, "_wiki", dir)),
-        `_wiki/${dir} tồn tại`
+        `_wiki/${dir} exists`
       );
     }
   });
@@ -135,34 +135,34 @@ async function runSuite2_WritePage() {
   await client.start();
   await client.call("wiki_init", {});
 
-  await test("ghi page mới → action=created", async () => {
+  await test("write new page → action=created", async () => {
     const res = await client.call("wiki_write_page", {
       path: "_wiki/infra/redis-oom.md",
-      content: makePage("Redis OOM fix bằng allkeys-lru", ["redis", "infra"]),
+      content: makePage("Redis OOM fix using allkeys-lru", ["redis", "infra"]),
       source: "test",
     });
     assertEquals(res.status, "success", "status");
     assertEquals(res.action, "created", "action");
     assertEquals(res.path, "_wiki/infra/redis-oom.md", "path");
-    assert(fs.existsSync(path.join(vaultPath, "_wiki/infra/redis-oom.md")), "file tồn tại");
+    assert(fs.existsSync(path.join(vaultPath, "_wiki/infra/redis-oom.md")), "file exists");
   });
 
-  await test("_index.md được cập nhật sau write", async () => {
+  await test("_index.md updated after write", async () => {
     const indexContent = fs.readFileSync(path.join(vaultPath, "_index.md"), "utf-8");
-    assert(indexContent.includes("redis-oom.md"), "_index.md chứa path mới");
-    assert(indexContent.includes("Redis OOM"), "_index.md chứa tldr");
+    assert(indexContent.includes("redis-oom.md"), "_index.md contains new path");
+    assert(indexContent.includes("Redis OOM"), "_index.md contains tldr");
   });
 
-  await test("ghi lại page cũ → action=updated", async () => {
+  await test("write existing page → action=updated", async () => {
     const res = await client.call("wiki_write_page", {
       path: "_wiki/infra/redis-oom.md",
-      content: makePage("Redis OOM — đã update", ["redis", "infra"]),
+      content: makePage("Redis OOM — updated", ["redis", "infra"]),
       source: "test",
     });
     assertEquals(res.action, "updated", "action");
   });
 
-  await test("path traversal → lỗi PATH_TRAVERSAL", async () => {
+  await test("path traversal → error PATH_TRAVERSAL", async () => {
     const res = await client.call("wiki_write_page", {
       path: "../../etc/passwd",
       content: "malicious",
@@ -172,7 +172,7 @@ async function runSuite2_WritePage() {
     assertEquals(res.code, "PATH_TRAVERSAL", "code");
   });
 
-  await test("vault chưa init → lỗi VAULT_NOT_INIT", async () => {
+  await test("vault not init → error VAULT_NOT_INIT", async () => {
     const emptyPath = freshVaultPath();
     fs.mkdirSync(emptyPath, { recursive: true });
     const c2 = new McpTestClient(emptyPath);
@@ -202,45 +202,45 @@ async function runSuite3_Query() {
   // Seed 3 pages
   await client.call("wiki_write_page", {
     path: "_wiki/infra/redis-oom.md",
-    content: makePage("Redis OOM do maxmemory-policy=noeviction", ["redis", "infra", "server-35"]),
+    content: makePage("Redis OOM due to maxmemory-policy=noeviction", ["redis", "infra", "server-35"]),
     source: "test",
   });
   await client.call("wiki_write_page", {
     path: "_wiki/ops/deploy-xcall.md",
-    content: makePage("Deploy xcall lên k8s bằng helm chart", ["xcall", "deploy", "k8s"]),
+    content: makePage("Deploy xcall on k8s using helm chart", ["xcall", "deploy", "k8s"]),
     source: "test",
   });
   await client.call("wiki_write_page", {
     path: "_wiki/concepts/mrcp.md",
-    content: makePage("MRCP protocol dùng cho ASR/TTS trong xcall", ["mrcp", "xcall", "concepts"]),
+    content: makePage("MRCP protocol used for ASR/TTS in xcall", ["mrcp", "xcall", "concepts"]),
     source: "test",
   });
 
-  await test("query tìm thấy page phù hợp (redis)", async () => {
+  await test("query finds relevant page (redis)", async () => {
     const res = await client.call("wiki_query", { question: "redis oom maxmemory" });
-    assert(Array.isArray(res.results), "results là array");
-    assert(res.results.length > 0, "có kết quả");
-    assert(res.results[0].path.includes("redis"), `result[0].path chứa 'redis': ${res.results[0].path}`);
-    assertContains(res, "next_step", "có next_step");
+    assert(Array.isArray(res.results), "results is array");
+    assert(res.results.length > 0, "has results");
+    assert(res.results[0].path.includes("redis"), `result[0].path contains 'redis': ${res.results[0].path}`);
+    assertContains(res, "next_step", "has next_step");
   });
 
-  await test("query trả tldr từ TL;DR section", async () => {
+  await test("query returns tldr from TL;DR section", async () => {
     const res = await client.call("wiki_query", { question: "xcall deploy helm" });
-    assert(res.results.length > 0, "có kết quả");
-    // tldr phải chứa text thực từ ## TL;DR section
-    assert(res.results[0].tldr.length > 10, "tldr không rỗng");
+    assert(res.results.length > 0, "has results");
+    // tldr must contain actual text from ## TL;DR section
+    assert(res.results[0].tldr.length > 10, "tldr not empty");
   });
 
-  await test("query không tìm thấy → status=not_found", async () => {
+  await test("query not found → status=not_found", async () => {
     const res = await client.call("wiki_query", { question: "zzz_nonexistent_topic_xyz" });
     assertEquals(res.status, "not_found", "status");
     assertEquals(res.results.length, 0, "results empty");
   });
 
-  await test("query score nằm trong [0, 1]", async () => {
+  await test("query score is within [0, 1]", async () => {
     const res = await client.call("wiki_query", { question: "redis" });
     for (const r of res.results) {
-      assert(r.score >= 0 && r.score <= 1, `score ${r.score} nằm trong [0,1]`);
+      assert(r.score >= 0 && r.score <= 1, `score ${r.score} is within [0,1]`);
     }
   });
 
@@ -261,30 +261,30 @@ async function runSuite4_ReadPage() {
     source: "test",
   });
 
-  await test("read shallow → có frontmatter + tldr_section", async () => {
+  await test("read shallow → has frontmatter + tldr_section", async () => {
     const res = await client.call("wiki_read_page", {
       path: "_wiki/infra/redis-oom.md",
       depth: "shallow",
     });
     assertEquals(res.depth, "shallow", "depth");
-    assertContains(res, "frontmatter", "có frontmatter");
-    assertContains(res, "tldr_section", "có tldr_section");
+    assertContains(res, "frontmatter", "has frontmatter");
+    assertContains(res, "tldr_section", "has tldr_section");
     assert(res.has_detail === true, "has_detail=true");
-    assert(res.frontmatter.tldr.length > 0, "frontmatter.tldr không rỗng");
+    assert(res.frontmatter.tldr.length > 0, "frontmatter.tldr is not empty");
   });
 
-  await test("read full → có content đầy đủ", async () => {
+  await test("read full → has full content", async () => {
     const res = await client.call("wiki_read_page", {
       path: "_wiki/infra/redis-oom.md",
       depth: "full",
     });
     assertEquals(res.depth, "full", "depth");
-    assertContains(res, "content", "có content");
-    assert(res.content.includes("## TL;DR"), "content chứa ## TL;DR");
-    assert(res.content.includes("## Detail"), "content chứa ## Detail");
+    assertContains(res, "content", "has content");
+    assert(res.content.includes("## TL;DR"), "content contains ## TL;DR");
+    assert(res.content.includes("## Detail"), "content contains ## Detail");
   });
 
-  await test("read page không tồn tại → PAGE_NOT_FOUND", async () => {
+  await test("read non-existent page → PAGE_NOT_FOUND", async () => {
     const res = await client.call("wiki_read_page", {
       path: "_wiki/infra/nonexistent.md",
       depth: "full",
@@ -311,9 +311,9 @@ async function runSuite5_Ingest() {
   const client = new McpTestClient(vaultPath);
   await client.start();
 
-  await test("vault chưa init → VAULT_NOT_INIT", async () => {
+  await test("vault not init → VAULT_NOT_INIT", async () => {
     const res = await client.call("wiki_ingest", {
-      content: "Redis bị OOM trên server-35 lúc 08:30. maxmemory-policy=noeviction.",
+      content: "Redis hit OOM on server-35 at 08:30. maxmemory-policy=noeviction.",
       source: "test",
     });
     assertEquals(res.code, "VAULT_NOT_INIT", "code");
@@ -321,7 +321,7 @@ async function runSuite5_Ingest() {
 
   await client.call("wiki_init", {});
 
-  await test("content quá ngắn (<50 tokens) → too_short", async () => {
+  await test("content too short (<50 tokens) → too_short", async () => {
     const res = await client.call("wiki_ingest", {
       content: "short",
       source: "test",
@@ -329,49 +329,49 @@ async function runSuite5_Ingest() {
     assertEquals(res.status, "too_short", "status");
   });
 
-  await test("ingest content hợp lệ, vault rỗng → candidates=[]", async () => {
-    // Content đủ dài (>200 chars = >50 tokens theo ước tính 0.25 tokens/char)
+  await test("ingest valid content, empty vault → candidates=[]", async () => {
+    // Content long enough (>200 chars = >50 tokens based on 0.25 tokens/char estimate)
     const res = await client.call("wiki_ingest", {
-      content: "Redis bị OOM trên server-35 lúc 08:30 sáng ngày hôm nay. Nguyên nhân chính là maxmemory-policy được cấu hình là noeviction, khiến Redis từ chối write mới khi RAM đầy thay vì evict key cũ. Cần đổi sang allkeys-lru để tự động evict key ít dùng nhất. Sau khi đổi policy cần restart Redis service và verify bằng redis-cli info memory.",
+      content: "Redis OOM on server-35 at 08:30 AM today. The root cause is maxmemory-policy being set to noeviction, causing Redis to reject new writes when RAM is full instead of evicting old keys. Need to change to allkeys-lru to automatically evict least used keys. After changing policy, restart Redis service and verify with redis-cli info memory.",
       source: "test",
     });
     assertEquals(res.status, "context_ready", "status");
-    assertContains(res, "candidates", "có candidates");
-    assertContains(res, "schema_excerpt", "có schema_excerpt");
-    assertContains(res, "next_step", "có next_step");
+    assertContains(res, "candidates", "has candidates");
+    assertContains(res, "schema_excerpt", "has schema_excerpt");
+    assertContains(res, "next_step", "has next_step");
   });
 
-  // Seed một page rồi ingest lại
+  // Seed a page and ingest again
   await client.call("wiki_write_page", {
     path: "_wiki/infra/redis-oom.md",
-    content: makePage("Redis OOM do maxmemory-policy=noeviction", ["redis", "infra"]),
+    content: makePage("Redis OOM due to maxmemory-policy=noeviction", ["redis", "infra"]),
     source: "test",
   });
 
-  await test("ingest content liên quan → candidates có page phù hợp", async () => {
+  await test("ingest related content → candidates has matching page", async () => {
     const res = await client.call("wiki_ingest", {
-      content: "Hôm nay Redis trên server-35 lại bị OOM lần nữa. maxmemory-policy vẫn còn là noeviction sau lần fix trước. Cần kiểm tra lại redis.conf và đảm bảo allkeys-lru đã được persist đúng cách sau khi restart service. Verify bằng CONFIG GET maxmemory-policy.",
+      content: "Today Redis on server-35 hit OOM again. maxmemory-policy was still noeviction after the previous fix. Need to double check redis.conf and ensure allkeys-lru was properly persisted after service restart. Verify with CONFIG GET maxmemory-policy.",
       source: "test",
       tags: ["redis", "server-35"],
     });
     assertEquals(res.status, "context_ready", "status");
-    assert(res.candidates.length > 0, "có candidates");
+    assert(res.candidates.length > 0, "has candidates");
     assert(
       res.candidates.some((c) => c.path.includes("redis")),
-      "candidates chứa redis page"
+      "candidates contains redis page"
     );
   });
 
-  await test("next_step khi không có candidates → gợi ý wiki_write_page", async () => {
+  await test("next_step when no candidates → suggests wiki_write_page", async () => {
     const res = await client.call("wiki_ingest", {
-      content: "FreeSWITCH MRCP config bị lỗi trên server mới khi khởi động. Cần kiểm tra mrcp.conf và sofia profile để tìm nguyên nhân. Đây là lần đầu tiên gặp vấn đề này trong hệ thống xcall. Log báo connection timeout sau 5000ms khi ASR processing.",
+      content: "FreeSWITCH MRCP config error on new server during startup. Need to check mrcp.conf and sofia profile to find root cause. This is the first time encountering this issue in xcall system. Log reports connection timeout after 5000ms during ASR processing.",
       source: "test",
     });
-    // BM25 có thể không match nếu vault chỉ có redis page
+    // BM25 might not match if vault only has redis page
     if (res.candidates && res.candidates.length === 0) {
-      assert(res.next_step.includes("wiki_write_page"), "next_step gợi ý wiki_write_page");
+      assert(res.next_step.includes("wiki_write_page"), "next_step suggests wiki_write_page");
     } else {
-      // Nếu match được thì cũng ok
+      // If it matches, that's also ok
       assertEquals(res.status, "context_ready", "status");
     }
   });
@@ -387,84 +387,84 @@ async function runSuite6_LintScan() {
   const client = new McpTestClient(vaultPath);
   await client.start();
 
-  await test("vault chưa init → VAULT_NOT_INIT", async () => {
+  await test("vault not init → VAULT_NOT_INIT", async () => {
     const res = await client.call("wiki_lint_scan", {});
     assertEquals(res.code, "VAULT_NOT_INIT", "code");
   });
 
   await client.call("wiki_init", {});
 
-  await test("vault không có pages → scanned=0, issues=[]", async () => {
+  await test("vault has no pages → scanned=0, issues=[]", async () => {
     const res = await client.call("wiki_lint_scan", {});
     assertEquals(res.scanned, 0, "scanned=0");
     assertEquals(res.issues.length, 0, "issues empty");
   });
 
-  // Seed page bình thường
+  // Seed a normal page
   await client.call("wiki_write_page", {
     path: "_wiki/infra/redis-oom.md",
     content: makePage("Redis OOM fix", ["redis", "infra"]),
     source: "test",
   });
 
-  await test("page hợp lệ → không có issues (hoặc chỉ ORPHAN vì mới tạo)", async () => {
+  await test("valid page → no issues (or only ORPHAN as just created)", async () => {
     const res = await client.call("wiki_lint_scan", {});
     assertEquals(res.scanned, 1, "scanned=1");
-    // Page mới tạo (mtimeAge=0) không bị ORPHAN vì < 7 ngày
+    // Page just created (mtimeAge=0) is not ORPHAN as < 7 days
     const nonOrphan = res.issues.filter(i => i.type !== "ORPHAN");
-    assertEquals(nonOrphan.length, 0, "không có issues ngoài ORPHAN");
+    assertEquals(nonOrphan.length, 0, "no issues besides ORPHAN");
   });
 
-  // Seed page thiếu TL;DR
-  const noTldrPage = makePage("Page thiếu TL;DR", [], false, 0, false);
+  // Seed page missing TL;DR
+  const noTldrPage = makePage("Page missing TL;DR", [], false, 0, false);
   await client.call("wiki_write_page", {
     path: "_wiki/ops/no-tldr.md",
     content: noTldrPage,
     source: "test",
   });
 
-  await test("MISSING_TLDR được detect", async () => {
+  await test("MISSING_TLDR is detected", async () => {
     const res = await client.call("wiki_lint_scan", {});
     const missingTldr = res.issues.filter(i => i.type === "MISSING_TLDR");
-    assert(missingTldr.length > 0, "có ít nhất 1 MISSING_TLDR issue");
+    assert(missingTldr.length > 0, "has at least 1 MISSING_TLDR issue");
     assertEquals(missingTldr[0].severity, "low", "severity=low");
-    assert(missingTldr[0].pages[0].includes("no-tldr"), "page đúng");
+    assert(missingTldr[0].pages[0].includes("no-tldr"), "correct page");
   });
 
-  // Seed page với STALE (dirty=true, 100 ngày trước)
+  // Seed page with STALE (dirty=true, 100 days ago)
   await client.call("wiki_write_page", {
     path: "_wiki/ops/stale-page.md",
-    content: makePage("Stale page cũ", ["ops"], true, 100),
+    content: makePage("Old stale page", ["ops"], true, 100),
     source: "test",
   });
 
-  await test("STALE được detect (dirty=true + >90 ngày)", async () => {
+  await test("STALE is detected (dirty=true + >90 days)", async () => {
     const res = await client.call("wiki_lint_scan", {});
     const stale = res.issues.filter(i => i.type === "STALE");
-    assert(stale.length > 0, "có STALE issue");
+    assert(stale.length > 0, "has STALE issue");
     assertEquals(stale[0].severity, "medium", "severity=medium");
   });
 
-  // Seed page với broken link
+  // Seed page with broken link
   await client.call("wiki_write_page", {
     path: "_wiki/ops/broken-links.md",
-    content: makePage("Page có broken link", ["ops"], false, 0, true, ["nonexistent-page"]),
+    content: makePage("Page with broken link", ["ops"], false, 0, true, ["nonexistent-page"]),
     source: "test",
   });
 
-  await test("BROKEN_LINK được detect", async () => {
+  await test("BROKEN_LINK is detected", async () => {
     const res = await client.call("wiki_lint_scan", {});
     const broken = res.issues.filter(i => i.type === "BROKEN_LINK");
-    assert(broken.length > 0, "có BROKEN_LINK issue");
+    assert(broken.length > 0, "has BROKEN_LINK issue");
     assertEquals(broken[0].severity, "high", "severity=high");
-    assert(broken[0].detail.includes("nonexistent-page"), "detail chứa tên link bị broken");
+    assert(broken[0].detail.includes("nonexistent-page"), "detail contains broken link name");
   });
 
-  await test("issues đều có id, suggested_action", async () => {
+  await test("issues all have id, suggested_action", async () => {
     const res = await client.call("wiki_lint_scan", {});
     for (const issue of res.issues) {
-      assert(issue.id.startsWith("issue-"), `id format đúng: ${issue.id}`);
-      assert(issue.suggested_action.length > 0, `suggested_action không rỗng: ${issue.id}`);
+      assert(issue.id.startsWith("issue-"), `id format is correct: ${issue.id}`);
+      assert(issue.suggested_action.length > 0, `suggested_action is not empty: ${issue.id}`);
     }
   });
 
@@ -480,12 +480,12 @@ async function runSuite7_ApplyFix() {
   await client.start();
   await client.call("wiki_init", {});
 
-  await test("issue_id không tồn tại → ISSUE_NOT_FOUND", async () => {
+  await test("issue_id does not exist → ISSUE_NOT_FOUND", async () => {
     const res = await client.call("wiki_apply_fix", { issue_id: "issue-999" });
     assertEquals(res.code, "ISSUE_NOT_FOUND", "code");
   });
 
-  // Seed pages để lint
+  // Seed pages for linting
   await client.call("wiki_write_page", {
     path: "_wiki/ops/no-tldr.md",
     content: makePage("No TL;DR page", [], false, 0, false),
@@ -502,50 +502,50 @@ async function runSuite7_ApplyFix() {
     source: "test",
   });
 
-  // Run lint để populate issues
+  // Run lint to populate issues
   const lintRes = await client.call("wiki_lint_scan", {});
   const missingTldrIssue = lintRes.issues.find(i => i.type === "MISSING_TLDR");
   const staleIssue = lintRes.issues.find(i => i.type === "STALE");
   const brokenIssue = lintRes.issues.find(i => i.type === "BROKEN_LINK");
 
-  await test("fix MISSING_TLDR → needs_content + trả content", async () => {
-    assert(missingTldrIssue, "MISSING_TLDR issue tồn tại");
+  await test("fix MISSING_TLDR → needs_content + return content", async () => {
+    assert(missingTldrIssue, "MISSING_TLDR issue exists");
     const res = await client.call("wiki_apply_fix", { issue_id: missingTldrIssue.id });
     assertEquals(res.status, "needs_content", "status");
-    assertContains(res, "content", "có content");
-    assertContains(res, "instruction", "có instruction");
-    assert(res.instruction.includes("wiki_write_page"), "instruction gợi ý wiki_write_page");
+    assertContains(res, "content", "has content");
+    assertContains(res, "instruction", "has instruction");
+    assert(res.instruction.includes("wiki_write_page"), "instruction suggests wiki_write_page");
   });
 
   await test("fix STALE → fixed, dirty=false", async () => {
-    assert(staleIssue, "STALE issue tồn tại");
+    assert(staleIssue, "STALE issue exists");
     const res = await client.call("wiki_apply_fix", { issue_id: staleIssue.id });
     assertEquals(res.status, "fixed", "status");
-    assert(res.changes.length > 0, "có changes");
-    assert(res.changes[0].summary.includes("dirty=false"), "summary đề cập dirty=false");
-    // Verify file thực sự được update
+    assert(res.changes.length > 0, "has changes");
+    assert(res.changes[0].summary.includes("dirty=false"), "summary mentions dirty=false");
+    // Verify file is actually updated
     const content = fs.readFileSync(path.join(vaultPath, "_wiki/ops/stale.md"), "utf-8");
-    assert(content.includes("dirty: false"), "file đã set dirty=false");
+    assert(content.includes("dirty: false"), "file has set dirty=false");
   });
 
-  await test("fix BROKEN_LINK không có resolution → needs_clarification", async () => {
-    assert(brokenIssue, "BROKEN_LINK issue tồn tại");
+  await test("fix BROKEN_LINK without resolution → needs_clarification", async () => {
+    assert(brokenIssue, "BROKEN_LINK issue exists");
     const res = await client.call("wiki_apply_fix", { issue_id: brokenIssue.id });
     assertEquals(res.status, "needs_clarification", "status");
-    assertContains(res, "question", "có question");
+    assertContains(res, "question", "has question");
   });
 
-  await test("fix BROKEN_LINK với resolution='remove' → fixed", async () => {
-    assert(brokenIssue, "BROKEN_LINK issue tồn tại");
+  await test("fix BROKEN_LINK with resolution='remove' → fixed", async () => {
+    assert(brokenIssue, "BROKEN_LINK issue exists");
     const res = await client.call("wiki_apply_fix", {
       issue_id: brokenIssue.id,
       resolution: "remove",
     });
     assertEquals(res.status, "fixed", "status");
-    // Verify link đã bị remove
+    // Verify link is removed
     const content = fs.readFileSync(path.join(vaultPath, "_wiki/ops/broken.md"), "utf-8");
-    assert(!content.includes("[[ghost-page]]"), "broken link đã bị xóa");
-    assert(content.includes("ghost-page"), "plain text vẫn còn");
+    assert(!content.includes("[[ghost-page]]"), "broken link removed");
+    assert(content.includes("ghost-page"), "plain text remains");
   });
 
   client.stop();
@@ -553,7 +553,7 @@ async function runSuite7_ApplyFix() {
 }
 
 async function runSuite8_Logging() {
-  suite("Suite 8: _log.md và _index.md integrity");
+  suite("Suite 8: _log.md and _index.md integrity");
   const vaultPath = freshVaultPath();
   fs.mkdirSync(vaultPath, { recursive: true });
   const client = new McpTestClient(vaultPath);
@@ -568,42 +568,42 @@ async function runSuite8_Logging() {
   await client.call("wiki_query", { question: "test page infra" });
   await client.call("wiki_lint_scan", {});
 
-  await test("_log.md ghi write entry", async () => {
+  await test("_log.md records write entry", async () => {
     const log = fs.readFileSync(path.join(vaultPath, "_log.md"), "utf-8");
-    assert(log.includes("write"), "_log.md có write entry");
-    assert(log.includes("test-page.md"), "_log.md có tên page");
+    assert(log.includes("write"), "_log.md has write entry");
+    assert(log.includes("test-page.md"), "_log.md has page name");
   });
 
-  await test("_log.md ghi query entry", async () => {
+  await test("_log.md records query entry", async () => {
     const log = fs.readFileSync(path.join(vaultPath, "_log.md"), "utf-8");
-    assert(log.includes("query"), "_log.md có query entry");
-    assert(log.includes("test page"), "_log.md có search term");
+    assert(log.includes("query"), "_log.md has query entry");
+    assert(log.includes("test page"), "_log.md has search term");
   });
 
-  await test("_log.md ghi lint entry + LAST_LINT anchor", async () => {
+  await test("_log.md records lint entry + LAST_LINT anchor", async () => {
     const log = fs.readFileSync(path.join(vaultPath, "_log.md"), "utf-8");
-    assert(log.includes("lint"), "_log.md có lint entry");
-    assert(log.includes("LAST_LINT"), "_log.md có LAST_LINT anchor");
+    assert(log.includes("lint"), "_log.md has lint entry");
+    assert(log.includes("LAST_LINT"), "_log.md has LAST_LINT anchor");
   });
 
-  await test("_index.md có đúng số pages", async () => {
+  await test("_index.md has correct number of pages", async () => {
     const idx = fs.readFileSync(path.join(vaultPath, "_index.md"), "utf-8");
-    // Đếm data rows (không phải header/separator)
+    // Count data rows (not header/separator)
     const rows = idx.split("\n").filter(l => l.startsWith("| _wiki/"));
-    assertEquals(rows.length, 1, "_index.md có 1 data row");
+    assertEquals(rows.length, 1, "_index.md has 1 data row");
   });
 
-  // Thêm page thứ 2
+  // Add second page
   await client.call("wiki_write_page", {
     path: "_wiki/ops/incident.md",
     content: makePage("Incident log", ["ops", "incident"]),
     source: "test",
   });
 
-  await test("_index.md tăng lên 2 rows sau write thứ 2", async () => {
+  await test("_index.md increases to 2 rows after second write", async () => {
     const idx = fs.readFileSync(path.join(vaultPath, "_index.md"), "utf-8");
     const rows = idx.split("\n").filter(l => l.startsWith("| _wiki/"));
-    assertEquals(rows.length, 2, "_index.md có 2 data rows");
+    assertEquals(rows.length, 2, "_index.md has 2 data rows");
   });
 
   client.stop();
@@ -626,11 +626,11 @@ async function runSuite9_EndToEnd() {
   // Step 2: Ingest raw session content
   await test("Step 2 — wiki_ingest raw session content", async () => {
     const rawContent = `
-      Hôm nay debug FreeSWITCH trên server-35. MRCP server bị timeout khi ASR request.
-      Nguyên nhân: mrcp.conf có connection_timeout=5000ms nhưng ASR engine cần ~8000ms.
-      Fix: tăng connection_timeout=15000, restart FreeSWITCH service.
-      Lệnh: systemctl restart freeswitch
-      Verify: fs_cli -x "sofia status" để check MRCP profile.
+      Today debug FreeSWITCH on server-35. MRCP server timeout on ASR request.
+      Cause: mrcp.conf has connection_timeout=5000ms but ASR engine needs ~8000ms.
+      Fix: increase connection_timeout=15000, restart FreeSWITCH service.
+      Command: systemctl restart freeswitch
+      Verify: fs_cli -x "sofia status" to check MRCP profile.
     `;
     const res = await client.call("wiki_ingest", {
       content: rawContent,
@@ -640,12 +640,12 @@ async function runSuite9_EndToEnd() {
     assertEquals(res.status, "context_ready", "ingest ok");
   });
 
-  // Step 3: Host LLM viết page (simulate)
+  // Step 3: Host LLM writes page (simulate)
   await test("Step 3 — wiki_write_page (host LLM decision)", async () => {
     const res = await client.call("wiki_write_page", {
       path: "_wiki/infra/freeswitch-mrcp-timeout.md",
       content: `---
-tldr: "FreeSWITCH MRCP timeout do connection_timeout quá thấp. Fix: tăng lên 15000ms."
+tldr: "FreeSWITCH MRCP timeout due to low connection_timeout. Fix: increase to 15000ms."
 tags: [freeswitch, mrcp, server-35, infra]
 related: []
 last_modified: "${new Date().toISOString().slice(0, 10)}"
@@ -655,25 +655,25 @@ source: "claude-session-e2e"
 
 ## TL;DR
 
-FreeSWITCH MRCP bị timeout khi ASR request vì connection_timeout=5000ms quá thấp.
-ASR engine cần ~8000ms để process. Fix: tăng connection_timeout=15000ms trong mrcp.conf.
+FreeSWITCH MRCP timed out during ASR request because connection_timeout=5000ms is too low.
+ASR engine needs ~8000ms to process. Fix: increase connection_timeout=15000ms in mrcp.conf.
 
 ---
 
 ## Detail
 
-### Triệu chứng
+### Symptoms
 
-MRCP request timeout sau 5 giây, ASR không trả kết quả.
+MRCP request timeout after 5 seconds, ASR returns no results.
 
-### Nguyên nhân
+### Cause
 
-mrcp.conf: connection_timeout=5000 (mặc định) < ASR processing time (~8000ms).
+mrcp.conf: connection_timeout=5000 (default) < ASR processing time (~8000ms).
 
 ### Fix
 
 \`\`\`bash
-# Sửa /etc/freeswitch/mrcp.conf
+# Edit /etc/freeswitch/mrcp.conf
 connection_timeout=15000
 
 # Restart
@@ -688,15 +688,15 @@ fs_cli -x "sofia status"
     assertEquals(res.action, "created", "page created");
   });
 
-  // Step 4: Query lại
-  await test("Step 4 — wiki_query tìm thấy page vừa tạo", async () => {
+  // Step 4: Query again
+  await test("Step 4 — wiki_query finds the newly created page", async () => {
     const res = await client.call("wiki_query", {
       question: "freeswitch mrcp timeout",
     });
-    assert(res.results.length > 0, "tìm thấy kết quả");
+    assert(res.results.length > 0, "found results");
     assert(
       res.results[0].path.includes("freeswitch"),
-      `result đúng page: ${res.results[0].path}`
+      `result is the correct page: ${res.results[0].path}`
     );
   });
 
@@ -707,15 +707,15 @@ fs_cli -x "sofia status"
       depth: "full",
     });
     assertEquals(res.depth, "full", "depth=full");
-    assert(res.content.includes("connection_timeout=15000"), "content chứa fix");
+    assert(res.content.includes("connection_timeout=15000"), "content contains fix");
   });
 
-  // Step 6: Lint (page mới, ít vấn đề)
-  await test("Step 6 — wiki_lint_scan không có MISSING_TLDR", async () => {
+  // Step 6: Lint (new page, few issues)
+  await test("Step 6 — wiki_lint_scan has no MISSING_TLDR", async () => {
     const res = await client.call("wiki_lint_scan", {});
     assertEquals(res.scanned, 1, "scanned=1");
     const missing = res.issues.filter(i => i.type === "MISSING_TLDR");
-    assertEquals(missing.length, 0, "không có MISSING_TLDR");
+    assertEquals(missing.length, 0, "no MISSING_TLDR");
   });
 
   client.stop();
@@ -741,13 +741,13 @@ async function main() {
     await runSuite8_Logging();
     await runSuite9_EndToEnd();
   } catch (err) {
-    console.error("\n\x1b[31mFATAL ERROR trong test runner:\x1b[0m", err.message);
+    console.error("\n\x1b[31mFATAL ERROR in test runner:\x1b[0m", err.message);
   }
 
   const duration = ((Date.now() - start) / 1000).toFixed(1);
 
   console.log("\n" + "=".repeat(50));
-  console.log(`\x1b[1mKết quả: \x1b[32m${passed} passed\x1b[0m, \x1b[31m${failed} failed\x1b[0m  (${duration}s)`);
+  console.log(`\x1b[1mResult: \x1b[32m${passed} passed\x1b[0m, \x1b[31m${failed} failed\x1b[0m  (${duration}s)`);
 
   if (failures.length > 0) {
     console.log("\n\x1b[31mFailed tests:\x1b[0m");

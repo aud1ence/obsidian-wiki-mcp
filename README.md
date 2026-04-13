@@ -14,6 +14,7 @@ Solves **document drift** — your vault stays up-to-date as knowledge evolves a
 - [Adding to Claude Code](#adding-to-claude-code)
 - [Configuration](#configuration)
 - [First-time Vault Setup](#first-time-vault-setup)
+- [CLAUDE.md Guidance](#claudemd-guidance)
 - [Vault Structure](#vault-structure)
 - [Page Format](#page-format)
 - [Tools Reference](#tools-reference)
@@ -96,6 +97,56 @@ This creates:
 - `_index.md` — BM25 search catalog (auto-managed)
 
 > If the vault was already initialized, `wiki_init()` reports `already_initialized` and does not overwrite anything.
+
+---
+
+## CLAUDE.md Guidance
+
+Adding a `CLAUDE.md` file to your vault enforces correct MCP tool usage across every Claude Code session — no need to remind Claude each time.
+
+### Why this matters
+
+Without a `CLAUDE.md`, Claude defaults to generic file tools (`Write`, `Edit`, `Read`) when working inside the vault. This bypasses the MCP's automatic indexing, backlink management, and schema validation — causing `_index.md` to drift out of sync and breaking search.
+
+### Recommended `CLAUDE.md`
+
+Create `CLAUDE.md` at the root of your vault with:
+
+```markdown
+# CLAUDE.md
+
+## Obsidian Wiki MCP — Required
+
+When working with wiki pages in this vault, always use obsidian-wiki MCP tools.
+Do NOT use Write, Edit, or Read directly on files inside `_wiki/`.
+
+### Standard workflow for writing
+
+1. `wiki_query` — search for related pages first (avoid duplicates, find backlinks)
+2. `wiki_write_page` — write the page (auto-updates `_index.md` and backlinks)
+3. Never manually edit `_index.md` or `_log.md`
+
+### Tool mapping
+
+| Instead of          | Use                |
+|---------------------|--------------------|
+| `Write` to `_wiki/` | `wiki_write_page`  |
+| `Read` a wiki file  | `wiki_read_page`   |
+| Searching in wiki   | `wiki_query`       |
+| Importing raw file  | `wiki_ingest`      |
+```
+
+### What each rule prevents
+
+| Rule | Without it |
+|------|------------|
+| `wiki_query` before writing | Duplicate pages with overlapping content |
+| `wiki_write_page` instead of `Write` | `_index.md` and `_log.md` go out of sync |
+| Never edit `_index.md` manually | BM25 index gets corrupted |
+
+### After adding `CLAUDE.md`
+
+Verify it's working: ask Claude to write a wiki page and confirm it calls `wiki_query` first, then `wiki_write_page` — not the `Write` tool.
 
 ---
 

@@ -56,9 +56,9 @@ export function registerWikiQuery(
   server.registerTool(
     "wiki_query",
     {
-      description: "Tìm kiếm BM25 trong vault, trả raw TL;DRs. Host LLM tự synthesize câu trả lời.",
+      description: "Search the vault using BM25, returning raw TL;DRs. Host LLM synthesizes answers.",
       inputSchema: {
-        question: z.string().describe("Câu hỏi hoặc từ khóa cần tìm"),
+        question: z.string().describe("The question or keywords to search for"),
       },
     },
     async (args) => {
@@ -77,7 +77,7 @@ export function registerWikiQuery(
                 text: JSON.stringify({
                   status: "not_found",
                   results: [],
-                  ...(isInit ? {} : { note: "Vault chưa init. Gọi wiki_init() để cải thiện search." }),
+                  ...(isInit ? {} : { note: "Vault not initialized. Call wiki_init() to improve search." }),
                 }),
               },
             ],

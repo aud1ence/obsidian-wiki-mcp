@@ -1,6 +1,6 @@
 /**
- * Minimal MCP stdio client dùng trong test.
- * Spawn server process, gửi request, nhận response theo id.
+ * Minimal MCP stdio client used in tests.
+ * Spawn server process, send requests, receive responses by id.
  */
 import { spawn } from "child_process";
 import path from "path";
@@ -19,7 +19,7 @@ export class McpTestClient {
   }
 
   async start() {
-    this.proc = spawn("node", [SERVER_PATH, "--vault", this.vaultPath], {
+    this.proc = spawn(process.execPath, [SERVER_PATH, "--vault", this.vaultPath], {
       stdio: ["pipe", "pipe", "pipe"],
     });
 
@@ -28,7 +28,7 @@ export class McpTestClient {
     this.proc.stdout.on("data", (chunk) => {
       this.buffer += chunk.toString();
       const lines = this.buffer.split("\n");
-      this.buffer = lines.pop(); // giữ lại phần chưa complete
+      this.buffer = lines.pop(); // keep the incomplete part
       for (const line of lines) {
         if (!line.trim()) continue;
         try {
@@ -84,7 +84,7 @@ export class McpTestClient {
     });
   }
 
-  /** Gọi một MCP tool, trả parsed JSON từ content[0].text */
+  /** Call an MCP tool, return parsed JSON from content[0].text */
   async call(toolName, args = {}) {
     const result = await this._send("tools/call", {
       name: toolName,
