@@ -42,6 +42,50 @@ function fullTextScan(
   }));
 }
 
+type QuestionType = "procedural" | "factual" | "exploratory";
+
+function detectQuestionType(question: string): QuestionType {
+  const q = question.toLowerCase();
+  if (
+    /\b(how|setup|install|config|configure|fix|debug|troubleshoot|deploy|run|step|build|enable|disable|restart|start|stop|upgrade|migrate|backup|restore)\b/.test(q) ||
+    /\b(l\u00e0m th\u1ebf n\u00e0o|c\u00e1ch|thi\u1ebft l\u1eadp|c\u00e0i \u0111\u1eb7t|kh\u1eafc ph\u1ee5c|tri\u1ec3n khai)\b/.test(q)
+  ) {
+    return "procedural";
+  }
+  if (
+    /\b(what|why|when|where|who|which|l\u00e0 g\u00ec|t\u1ea1i sao|khi n\u00e0o|\u1edf \u0111\u00e2u)\b/.test(q)
+  ) {
+    return "factual";
+  }
+  return "exploratory";
+}
+
+/** For procedural questions, boost pages with operational tags */
+function reRankForProcedural(
+  results: import("../lib/index_manager.js").SearchResult[],
+  bm25Index: import("../lib/index_manager.js").Bm25Index
+): import("../lib/index_manager.js").SearchResult[] {
+  const opsTagKeywords = new Set([
+    "runbook", "troubleshoot", "incident", "ops", "fix", "deploy",
+    "setup", "install", "config", "debug", "backup", "restore",
+  ]);
+
+  const boosted = results.map((r) => {
+    const row = bm25Index.getRow(r.path);
+    if (!row) return r;
+    const tags = row.tags.toLowerCase().split(",").map((t) => t.trim());
+    const hasOpsTag = tags.some((t) => opsTagKeywords.has(t));
+    return { ...r, score: hasOpsTag ? r.score * 1.2 : r.score };
+  });
+
+  boosted.sort((a, b) => b.score - a.score);
+  const maxScore = boosted[0]?.score ?? 1;
+  return boosted.map((r) => ({
+    ...r,
+    score: parseFloat((r.score / maxScore).toFixed(2)),
+  }));
+}
+
 function extractTldrSection(content: string): string {
   const parsed = matter(content);
   const match = parsed.content.match(/## TL;DR\n+([\s\S]*?)(?=\n---|\n## |$)/);
@@ -65,7 +109,13 @@ export function registerWikiQuery(
       const vaultPath = ctx.config.vaultPath;
       const isInit = isVaultInitialized(vaultPath);
 
+      const questionType = detectQuestionType(args.question);
       let results = ctx.bm25Index.search(args.question, ctx.config.bm25TopK);
+
+      // For procedural questions, re-rank by boosting pages with operational tags
+      if (questionType === "procedural" && results.length > 0) {
+        results = reRankForProcedural(results, ctx.bm25Index);
+      }
 
       if (results.length === 0) {
         const fallback = fullTextScan(vaultPath, args.question, ctx.config.bm25TopK);
