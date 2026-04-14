@@ -1,6 +1,6 @@
 {
   "name": "obsidian-wiki-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server implementing Karpathy's LLM Wiki pattern for Obsidian vaults",
   "type": "module",
   "files": [
