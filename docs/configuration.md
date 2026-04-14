@@ -57,6 +57,71 @@ After adding, verify with `/mcp` inside Claude Code.
 
 ---
 
+## Adding to Kiro CLI
+
+### Option 1: CLI (recommended)
+
+```bash
+kiro mcp add obsidian-wiki -- npx -y obsidian-wiki-mcp --vault "/path/to/your/vault"
+```
+
+After adding, verify inside Kiro that the server appears in the MCP server list.
+
+### Option 2: `.kiro/settings/mcp.json` — per project
+
+```json
+{
+  "mcpServers": {
+    "obsidian-wiki": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "obsidian-wiki-mcp", "--vault", "/path/to/your/vault"]
+    }
+  }
+}
+```
+
+### Option 3: Global Kiro config
+
+```json
+{
+  "mcpServers": {
+    "obsidian-wiki": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "obsidian-wiki-mcp", "--vault", "/path/to/your/vault"]
+    }
+  }
+}
+```
+
+Place this in your global Kiro MCP settings file (typically `~/.kiro/settings/mcp.json`).
+
+---
+
+## Adding to OpenAI Codex CLI
+
+### Option 1: `--mcp-config` flag (one-off)
+
+```bash
+codex --mcp-config '{"obsidian-wiki":{"command":"npx","args":["-y","obsidian-wiki-mcp","--vault","/path/to/your/vault"]}}'
+```
+
+### Option 2: `~/.codex/config.json` — global
+
+```json
+{
+  "mcpServers": {
+    "obsidian-wiki": {
+      "command": "npx",
+      "args": ["-y", "obsidian-wiki-mcp", "--vault", "/path/to/your/vault"]
+    }
+  }
+}
+```
+
+---
+
 ## Server config file
 
 `~/.obsidian-wiki-mcp.json` — optional, read at startup.

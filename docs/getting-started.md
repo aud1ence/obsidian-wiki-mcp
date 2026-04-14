@@ -124,3 +124,83 @@ Do NOT use Write, Edit, or Read directly on files inside `_wiki/`.
 | `wiki_query` before writing | Duplicate pages with overlapping content |
 | `wiki_write_page` instead of `Write` | `_index.md` and `_log.md` go out of sync |
 | Never edit `_index.md` manually | BM25 index gets corrupted |
+
+---
+
+## AGENTS.md — Kiro CLI
+
+Kiro CLI reads an `AGENTS.md` file at the project root to apply standing instructions across every session. Create `AGENTS.md` at the vault root:
+
+```markdown
+# AGENTS.md
+
+## Obsidian Wiki MCP — Required
+
+When working with wiki pages in this vault, always use obsidian-wiki MCP tools.
+Do NOT use built-in file tools directly on files inside `_wiki/`.
+
+### Standard workflow for writing
+
+1. `wiki_query` — search for related pages first (avoid duplicates, find backlinks)
+2. `wiki_write_page` — write the page (auto-updates `_index.md` and backlinks)
+3. Never manually edit `_index.md` or `_log.md`
+
+### Tool mapping
+
+| Instead of                   | Use                |
+|------------------------------|--------------------|
+| Writing files to `_wiki/`    | `wiki_write_page`  |
+| Reading a wiki file          | `wiki_read_page`   |
+| Searching in wiki            | `wiki_query`       |
+| Importing raw content        | `wiki_ingest`      |
+```
+
+### What each rule prevents
+
+| Rule | Without it |
+|------|------------|
+| `wiki_query` before writing | Duplicate pages with overlapping content |
+| `wiki_write_page` instead of built-in write | `_index.md` and `_log.md` go out of sync |
+| Never edit `_index.md` manually | BM25 index gets corrupted |
+
+---
+
+## AGENTS.md — OpenAI Codex CLI
+
+Codex CLI reads `AGENTS.md` at the project root before each task. The same file used for Kiro works for Codex — no separate file needed if you use both clients on the same vault.
+
+Without it, Codex defaults to built-in shell/file tools when working in the vault, bypassing automatic indexing and backlink management. This causes `_index.md` to drift and breaks search.
+
+Create `AGENTS.md` at the vault root (same content as the Kiro section above):
+
+```markdown
+# AGENTS.md
+
+## Obsidian Wiki MCP — Required
+
+When working with wiki pages in this vault, always use obsidian-wiki MCP tools.
+Do NOT use built-in file tools directly on files inside `_wiki/`.
+
+### Standard workflow for writing
+
+1. `wiki_query` — search for related pages first (avoid duplicates, find backlinks)
+2. `wiki_write_page` — write the page (auto-updates `_index.md` and backlinks)
+3. Never manually edit `_index.md` or `_log.md`
+
+### Tool mapping
+
+| Instead of                   | Use                |
+|------------------------------|--------------------|
+| Writing files to `_wiki/`    | `wiki_write_page`  |
+| Reading a wiki file          | `wiki_read_page`   |
+| Searching in wiki            | `wiki_query`       |
+| Importing raw content        | `wiki_ingest`      |
+```
+
+### What each rule prevents
+
+| Rule | Without it |
+|------|------------|
+| `wiki_query` before writing | Duplicate pages with overlapping content |
+| `wiki_write_page` instead of built-in write | `_index.md` and `_log.md` go out of sync |
+| Never edit `_index.md` manually | BM25 index gets corrupted |
