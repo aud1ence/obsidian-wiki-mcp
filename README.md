@@ -16,10 +16,21 @@ always searchable        — BM25 index rebuilt on every write
 
 ## Quick Start
 
-**1. Add to Claude Code:**
+**1. Add to your AI client:**
 
+**Claude Code**
 ```bash
 claude mcp add obsidian-wiki -- npx -y obsidian-wiki-mcp --vault "/path/to/your/vault"
+```
+
+**Kiro CLI**
+```bash
+kiro mcp add obsidian-wiki -- npx -y obsidian-wiki-mcp --vault "/path/to/your/vault"
+```
+
+**OpenAI Codex CLI**
+```bash
+codex --mcp-config '{"obsidian-wiki":{"command":"npx","args":["-y","obsidian-wiki-mcp","--vault","/path/to/your/vault"]}}'
 ```
 
 > Paths with spaces must be quoted. See [Configuration](docs/configuration.md) for all installation options.
@@ -43,7 +54,7 @@ Use wiki_query to find information about [topic]
 
 | Doc | Description |
 |-----|-------------|
-| [Getting Started](docs/getting-started.md) | First-time setup, existing vault migration, CLAUDE.md |
+| [Getting Started](docs/getting-started.md) | First-time setup, existing vault migration, CLAUDE.md / AGENTS.md |
 | [Vault Structure](docs/structure.md) | Folder layout, page format, tags, naming convention |
 | [Tools Reference](docs/tools.md) | All MCP tools with parameters and examples |
 | [Workflows](docs/workflows.md) | Common usage patterns |
