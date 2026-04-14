@@ -7,6 +7,7 @@ import { Bm25Index } from "../lib/index_manager.js";
 import { BacklinkIndex } from "../lib/backlink_index.js";
 import { isVaultInitialized, relPath } from "../lib/vault.js";
 import { appendLog } from "../lib/log_manager.js";
+import { DEFAULT_FOLDERS } from "./wiki_init.js";
 
 const MAX_CONTENT_CHARS = 16000; // ~4000 tokens
 
@@ -24,12 +25,37 @@ function hasWikiFrontmatter(fm: Record<string, unknown>): boolean {
 }
 
 /**
- * Suggest a wiki path from the source file path.
- * e.g. "notes/redis-tips.md" → "_wiki/concepts/redis-tips.md"
+ * List top-level folders under _wiki/ (excludes files and hidden entries).
  */
-function suggestWikiPath(sourceFile: string): string {
+function getAvailableFolders(vaultPath: string): string[] {
+  const wikiDir = path.join(vaultPath, "_wiki");
+  if (!fs.existsSync(wikiDir)) return DEFAULT_FOLDERS.map((f) => f.name);
+  const entries = fs.readdirSync(wikiDir, { withFileTypes: true });
+  const dirs = entries
+    .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+    .map((e) => e.name);
+  return dirs.length > 0 ? dirs : DEFAULT_FOLDERS.map((f) => f.name);
+}
+
+/**
+ * Suggest a wiki path from the source file path.
+ * Tries to map the source's parent folder name to an existing _wiki/ folder.
+ * Falls back to the first available folder (usually "topics" in a default vault).
+ */
+function suggestWikiPath(sourceFile: string, availableFolders: string[]): string {
   const base = path.basename(sourceFile, ".md");
-  return `_wiki/concepts/${base}.md`;
+  const sourceFolder = path.basename(path.dirname(sourceFile)).toLowerCase();
+
+  // Direct match: source folder name exists in _wiki/
+  if (availableFolders.includes(sourceFolder)) {
+    return `_wiki/${sourceFolder}/${base}.md`;
+  }
+
+  // Fallback: prefer "topics" if present, otherwise first available folder
+  const fallback = availableFolders.includes("topics")
+    ? "topics"
+    : availableFolders[0] ?? "topics";
+  return `_wiki/${fallback}/${base}.md`;
 }
 
 /**
@@ -171,8 +197,9 @@ export function registerWikiImport(
       const candidates = ctx.bm25Index.search(searchQuery, ctx.config.bm25TopK);
 
       // Determine suggested wiki path
+      const availableFolders = getAvailableFolders(vaultPath);
       const suggestedPath =
-        args.suggested_wiki_path ?? suggestWikiPath(absSourcePath);
+        args.suggested_wiki_path ?? suggestWikiPath(absSourcePath, availableFolders);
 
       // Check if target path already exists
       const targetAbs = path.resolve(vaultPath, suggestedPath);
@@ -210,6 +237,7 @@ export function registerWikiImport(
 
                 // Where to write
                 suggested_wiki_path: suggestedPath,
+                available_folders: availableFolders,
                 target_exists: targetExists,
                 existing_page_path: targetRelPath,
 

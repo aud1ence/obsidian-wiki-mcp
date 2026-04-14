@@ -115,7 +115,7 @@ async function runSuite1_WikiInit() {
   });
 
   await test("_wiki/ subdirs were created", async () => {
-    for (const dir of ["infra", "ops", "concepts", "projects"]) {
+    for (const dir of ["systems", "guides", "topics", "work"]) {
       assert(
         fs.existsSync(path.join(vaultPath, "_wiki", dir)),
         `_wiki/${dir} exists`
@@ -137,14 +137,14 @@ async function runSuite2_WritePage() {
 
   await test("write new page → action=created", async () => {
     const res = await client.call("wiki_write_page", {
-      path: "_wiki/infra/redis-oom.md",
-      content: makePage("Redis OOM fix using allkeys-lru", ["redis", "infra"]),
+      path: "_wiki/systems/redis-oom.md",
+      content: makePage("Redis OOM fix using allkeys-lru", ["redis", "systems"]),
       source: "test",
     });
     assertEquals(res.status, "success", "status");
     assertEquals(res.action, "created", "action");
-    assertEquals(res.path, "_wiki/infra/redis-oom.md", "path");
-    assert(fs.existsSync(path.join(vaultPath, "_wiki/infra/redis-oom.md")), "file exists");
+    assertEquals(res.path, "_wiki/systems/redis-oom.md", "path");
+    assert(fs.existsSync(path.join(vaultPath, "_wiki/systems/redis-oom.md")), "file exists");
   });
 
   await test("_index.md updated after write", async () => {
@@ -155,8 +155,8 @@ async function runSuite2_WritePage() {
 
   await test("write existing page → action=updated", async () => {
     const res = await client.call("wiki_write_page", {
-      path: "_wiki/infra/redis-oom.md",
-      content: makePage("Redis OOM — updated", ["redis", "infra"]),
+      path: "_wiki/systems/redis-oom.md",
+      content: makePage("Redis OOM — updated", ["redis", "systems"]),
       source: "test",
     });
     assertEquals(res.action, "updated", "action");
@@ -201,17 +201,17 @@ async function runSuite3_Query() {
 
   // Seed 3 pages
   await client.call("wiki_write_page", {
-    path: "_wiki/infra/redis-oom.md",
-    content: makePage("Redis OOM due to maxmemory-policy=noeviction", ["redis", "infra", "server-35"]),
+    path: "_wiki/systems/redis-oom.md",
+    content: makePage("Redis OOM due to maxmemory-policy=noeviction", ["redis", "systems", "server-35"]),
     source: "test",
   });
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/deploy-xcall.md",
+    path: "_wiki/guides/deploy-xcall.md",
     content: makePage("Deploy xcall on k8s using helm chart", ["xcall", "deploy", "k8s"]),
     source: "test",
   });
   await client.call("wiki_write_page", {
-    path: "_wiki/concepts/mrcp.md",
+    path: "_wiki/topics/mrcp.md",
     content: makePage("MRCP protocol used for ASR/TTS in xcall", ["mrcp", "xcall", "concepts"]),
     source: "test",
   });
@@ -256,14 +256,14 @@ async function runSuite4_ReadPage() {
   await client.start();
   await client.call("wiki_init", {});
   await client.call("wiki_write_page", {
-    path: "_wiki/infra/redis-oom.md",
-    content: makePage("Redis OOM fix", ["redis", "infra"]),
+    path: "_wiki/systems/redis-oom.md",
+    content: makePage("Redis OOM fix", ["redis", "systems"]),
     source: "test",
   });
 
   await test("read shallow → has frontmatter + tldr_section", async () => {
     const res = await client.call("wiki_read_page", {
-      path: "_wiki/infra/redis-oom.md",
+      path: "_wiki/systems/redis-oom.md",
       depth: "shallow",
     });
     assertEquals(res.depth, "shallow", "depth");
@@ -275,7 +275,7 @@ async function runSuite4_ReadPage() {
 
   await test("read full → has full content", async () => {
     const res = await client.call("wiki_read_page", {
-      path: "_wiki/infra/redis-oom.md",
+      path: "_wiki/systems/redis-oom.md",
       depth: "full",
     });
     assertEquals(res.depth, "full", "depth");
@@ -286,7 +286,7 @@ async function runSuite4_ReadPage() {
 
   await test("read non-existent page → PAGE_NOT_FOUND", async () => {
     const res = await client.call("wiki_read_page", {
-      path: "_wiki/infra/nonexistent.md",
+      path: "_wiki/systems/nonexistent.md",
       depth: "full",
     });
     assertEquals(res.code, "PAGE_NOT_FOUND", "code");
@@ -343,8 +343,8 @@ async function runSuite5_Ingest() {
 
   // Seed a page and ingest again
   await client.call("wiki_write_page", {
-    path: "_wiki/infra/redis-oom.md",
-    content: makePage("Redis OOM due to maxmemory-policy=noeviction", ["redis", "infra"]),
+    path: "_wiki/systems/redis-oom.md",
+    content: makePage("Redis OOM due to maxmemory-policy=noeviction", ["redis", "systems"]),
     source: "test",
   });
 
@@ -402,8 +402,8 @@ async function runSuite6_LintScan() {
 
   // Seed a normal page
   await client.call("wiki_write_page", {
-    path: "_wiki/infra/redis-oom.md",
-    content: makePage("Redis OOM fix", ["redis", "infra"]),
+    path: "_wiki/systems/redis-oom.md",
+    content: makePage("Redis OOM fix", ["redis", "systems"]),
     source: "test",
   });
 
@@ -418,7 +418,7 @@ async function runSuite6_LintScan() {
   // Seed page missing TL;DR
   const noTldrPage = makePage("Page missing TL;DR", [], false, 0, false);
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/no-tldr.md",
+    path: "_wiki/guides/no-tldr.md",
     content: noTldrPage,
     source: "test",
   });
@@ -433,8 +433,8 @@ async function runSuite6_LintScan() {
 
   // Seed page with STALE (dirty=true, 100 days ago)
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/stale-page.md",
-    content: makePage("Old stale page", ["ops"], true, 100),
+    path: "_wiki/guides/stale-page.md",
+    content: makePage("Old stale page", ["guides"], true, 100),
     source: "test",
   });
 
@@ -447,8 +447,8 @@ async function runSuite6_LintScan() {
 
   // Seed page with broken link
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/broken-links.md",
-    content: makePage("Page with broken link", ["ops"], false, 0, true, ["nonexistent-page"]),
+    path: "_wiki/guides/broken-links.md",
+    content: makePage("Page with broken link", ["guides"], false, 0, true, ["nonexistent-page"]),
     source: "test",
   });
 
@@ -487,17 +487,17 @@ async function runSuite7_ApplyFix() {
 
   // Seed pages for linting
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/no-tldr.md",
+    path: "_wiki/guides/no-tldr.md",
     content: makePage("No TL;DR page", [], false, 0, false),
     source: "test",
   });
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/stale.md",
+    path: "_wiki/guides/stale.md",
     content: makePage("Stale page", [], true, 100),
     source: "test",
   });
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/broken.md",
+    path: "_wiki/guides/broken.md",
     content: makePage("Broken link page", [], false, 0, true, ["ghost-page"]),
     source: "test",
   });
@@ -524,7 +524,7 @@ async function runSuite7_ApplyFix() {
     assert(res.changes.length > 0, "has changes");
     assert(res.changes[0].summary.includes("dirty=false"), "summary mentions dirty=false");
     // Verify file is actually updated
-    const content = fs.readFileSync(path.join(vaultPath, "_wiki/ops/stale.md"), "utf-8");
+    const content = fs.readFileSync(path.join(vaultPath, "_wiki/guides/stale.md"), "utf-8");
     assert(content.includes("dirty: false"), "file has set dirty=false");
   });
 
@@ -543,7 +543,7 @@ async function runSuite7_ApplyFix() {
     });
     assertEquals(res.status, "fixed", "status");
     // Verify link is removed
-    const content = fs.readFileSync(path.join(vaultPath, "_wiki/ops/broken.md"), "utf-8");
+    const content = fs.readFileSync(path.join(vaultPath, "_wiki/guides/broken.md"), "utf-8");
     assert(!content.includes("[[ghost-page]]"), "broken link removed");
     assert(content.includes("ghost-page"), "plain text remains");
   });
@@ -561,8 +561,8 @@ async function runSuite8_Logging() {
   await client.call("wiki_init", {});
 
   await client.call("wiki_write_page", {
-    path: "_wiki/infra/test-page.md",
-    content: makePage("Test page", ["infra"]),
+    path: "_wiki/systems/test-page.md",
+    content: makePage("Test page", ["systems"]),
     source: "claude-session-001",
   });
   await client.call("wiki_query", { question: "test page infra" });
@@ -595,8 +595,8 @@ async function runSuite8_Logging() {
 
   // Add second page
   await client.call("wiki_write_page", {
-    path: "_wiki/ops/incident.md",
-    content: makePage("Incident log", ["ops", "incident"]),
+    path: "_wiki/guides/incident.md",
+    content: makePage("Incident log", ["guides", "incident"]),
     source: "test",
   });
 
@@ -643,10 +643,10 @@ async function runSuite9_EndToEnd() {
   // Step 3: Host LLM writes page (simulate)
   await test("Step 3 — wiki_write_page (host LLM decision)", async () => {
     const res = await client.call("wiki_write_page", {
-      path: "_wiki/infra/freeswitch-mrcp-timeout.md",
+      path: "_wiki/systems/freeswitch-mrcp-timeout.md",
       content: `---
 tldr: "FreeSWITCH MRCP timeout due to low connection_timeout. Fix: increase to 15000ms."
-tags: [freeswitch, mrcp, server-35, infra]
+tags: [freeswitch, mrcp, server-35, systems]
 related: []
 last_modified: "${new Date().toISOString().slice(0, 10)}"
 dirty: false
@@ -703,7 +703,7 @@ fs_cli -x "sofia status"
   // Step 5: Read full page
   await test("Step 5 — wiki_read_page full", async () => {
     const res = await client.call("wiki_read_page", {
-      path: "_wiki/infra/freeswitch-mrcp-timeout.md",
+      path: "_wiki/systems/freeswitch-mrcp-timeout.md",
       depth: "full",
     });
     assertEquals(res.depth, "full", "depth=full");
