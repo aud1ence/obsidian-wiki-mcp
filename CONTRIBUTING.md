@@ -56,6 +56,23 @@ test/
 
 The test runner runs all suites sequentially. To isolate one suite, comment out the others in `test/runner.js`'s `main()` function.
 
+## Branching workflow
+
+```
+master          ← stable, always releasable
+feature/<name>  ← branch off master, PR back to master
+```
+
+```bash
+git checkout master && git pull
+git checkout -b feature/my-change
+# ... make changes ...
+git push -u origin feature/my-change
+gh pr create --base master
+```
+
+One PR per logical change. Squash or rebase before opening if needed to keep history clean.
+
 ## Commit style
 
 ```
@@ -70,7 +87,8 @@ chore: add CI workflow
 ## Before opening a PR
 
 - [ ] `npm run lint` passes
-- [ ] `npm run build` passes  
-- [ ] `npm test` passes (all 9 suites)
+- [ ] `npm run build` passes
+- [ ] `npm test` passes
 - [ ] New behaviour has test coverage
 - [ ] Tool contract changes are documented
+- [ ] PR description includes `Closes #<issue>` if applicable
