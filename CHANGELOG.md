@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pull request template
 - `CONTRIBUTING.md` guide
 
+## [0.1.1] - 2026-04-14
+
+### Fixed
+- **`wiki_ingest` chunk processing**: each chunk now runs BM25 search independently; candidates are aggregated (highest score per path) across all chunks, then sorted and sliced to `bm25TopK`. Previously only the first chunk was searched and remaining chunks were delegated to the host LLM.
+- **Startup `_index.md` sync validation**: on startup, `_index.md` is now compared against actual `_wiki/` pages. If mismatched (unindexed pages or orphaned entries), the index is rebuilt automatically before the server accepts connections.
+- **`wiki_query` question type detection**: queries are now classified as `procedural`, `factual`, or `exploratory`. Procedural queries (containing keywords like `how`, `setup`, `fix`, `troubleshoot`, etc.) trigger a re-rank step that boosts pages with operational tags (`runbook`, `troubleshoot`, `incident`, `ops`, `deploy`, etc.) before returning results.
+
+### Changed
+- `Bm25Index` interface gains a `getRow(path)` method to allow callers to inspect the raw `IndexRow` for a given page path.
+- `validateAndRebuildIndex(vaultPath, bm25Index)` added to `index_manager.ts` as a public utility called during server startup.
+
 ## [0.1.0] - 2026-04-11
 
 ### Added
