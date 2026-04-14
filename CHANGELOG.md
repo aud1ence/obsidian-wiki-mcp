@@ -7,13 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-04-14
+
 ### Added
-- CI/CD workflows (test on push/PR, publish on tag)
-- ESLint + Prettier configuration
-- `.npmignore` to exclude source files from published package
-- GitHub issue templates (bug report, feature request)
-- Pull request template
-- `CONTRIBUTING.md` guide
+- **Configurable vault folder structure**: `wiki_init` now uses a `DEFAULT_FOLDERS` array (`systems`, `guides`, `topics`, `work`) instead of hardcoded categories, making the folder layout easy to extend.
+- **Smart import path suggestion**: `wiki_import` reads actual `_wiki/` subdirectories and maps the source file's parent folder to the closest matching wiki folder; falls back to `topics`.
+- **Documentation site**: `docs/` directory added with 6 guides — getting-started, structure, tools, workflows, configuration, and troubleshooting.
+- **MIT LICENSE file**: `LICENSE` added to satisfy OSS requirements; GitHub now auto-detects the license.
+- **OSS hygiene scaffolding**: CI/CD workflows (test on push/PR, publish on tag), ESLint + Prettier configuration, `.npmignore`, GitHub issue templates, PR template, and `CONTRIBUTING.md`.
 
 ## [0.1.1] - 2026-04-14
 
