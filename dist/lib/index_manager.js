@@ -1,5 +1,7 @@
 import fs from "fs";
 import path from "path";
+import matter from "gray-matter";
+import { listWikiPages, relPath } from "./vault.js";
 const INDEX_HEADER = `| path | tldr | tags | last_modified |
 |------|------|------|---------------|`;
 /** Parse _index.md → array of IndexRow */
@@ -166,6 +168,47 @@ function createSimpleBm25(initialRows) {
             for (const row of rows)
                 indexRow(row);
         },
+        getRow(filePath) {
+            return docs.get(filePath)?.row;
+        },
     };
+}
+/**
+ * Validate _index.md against actual _wiki/ pages.
+ * If out of sync (missing entries or orphaned entries), rebuild automatically.
+ * Returns true if a rebuild was performed.
+ */
+export function validateAndRebuildIndex(vaultPath, bm25Index) {
+    const indexedRows = readIndexRows(vaultPath);
+    const indexedPaths = new Set(indexedRows.map((r) => r.path));
+    const wikiPages = listWikiPages(vaultPath);
+    const actualPaths = new Set(wikiPages.map((abs) => relPath(abs, vaultPath)));
+    const hasUnindexed = wikiPages.some((abs) => !indexedPaths.has(relPath(abs, vaultPath)));
+    const hasOrphaned = indexedRows.some((r) => !actualPaths.has(r.path));
+    if (!hasUnindexed && !hasOrphaned)
+        return false;
+    // Rebuild from disk
+    const today = new Date().toISOString().slice(0, 10);
+    const newRows = [];
+    for (const absPath of wikiPages) {
+        const rel = relPath(absPath, vaultPath);
+        try {
+            const raw = fs.readFileSync(absPath, "utf-8");
+            const parsed = matter(raw);
+            const fm = parsed.data;
+            newRows.push({
+                path: rel,
+                tldr: typeof fm.tldr === "string" ? fm.tldr : parsed.content.slice(0, 120).replace(/\n/g, " ").trim(),
+                tags: Array.isArray(fm.tags) ? fm.tags.join(",") : typeof fm.tags === "string" ? fm.tags : "",
+                last_modified: typeof fm.last_modified === "string" ? fm.last_modified : today,
+            });
+        }
+        catch {
+            // skip unreadable files
+        }
+    }
+    writeIndexFile(vaultPath, newRows);
+    bm25Index.rebuild(newRows);
+    return true;
 }
 //# sourceMappingURL=index_manager.js.map
