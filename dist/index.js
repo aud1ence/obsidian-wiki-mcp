@@ -2,7 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { resolveConfig } from "./config.js";
-import { buildBm25Index } from "./lib/index_manager.js";
+import { buildBm25Index, validateAndRebuildIndex } from "./lib/index_manager.js";
 import { buildBacklinkIndex } from "./lib/backlink_index.js";
 import { cleanupStaleLocks, isVaultInitialized } from "./lib/vault.js";
 import { registerTools } from "./tools/index.js";
@@ -31,6 +31,11 @@ async function main() {
     cleanupStaleLocks(config.vaultPath, config.staleLockTtlMs);
     // Build indexes
     const bm25Index = await buildBm25Index(config.vaultPath);
+    // Step 5: Validate _index.md is in sync with _wiki/ — rebuild automatically if not
+    const rebuilt = validateAndRebuildIndex(config.vaultPath, bm25Index);
+    if (rebuilt) {
+        console.error("[obsidian-wiki-mcp] WARN: _index.md was out of sync. Rebuilt automatically.");
+    }
     const backlinkIndex = await buildBacklinkIndex(config.vaultPath);
     if (config.logLevel === "debug") {
         console.error(`[obsidian-wiki-mcp] Vault: ${config.vaultPath}`);

@@ -4,6 +4,7 @@ import matter from "gray-matter";
 import { z } from "zod";
 import { isVaultInitialized, relPath } from "../lib/vault.js";
 import { appendLog } from "../lib/log_manager.js";
+import { DEFAULT_FOLDERS } from "./wiki_init.js";
 const MAX_CONTENT_CHARS = 16000; // ~4000 tokens
 function expandHome(p) {
     if (p.startsWith("~"))
@@ -18,12 +19,35 @@ function hasWikiFrontmatter(fm) {
     return typeof fm.tldr === "string" && fm.tldr.trim().length > 0;
 }
 /**
- * Suggest a wiki path from the source file path.
- * e.g. "notes/redis-tips.md" → "_wiki/concepts/redis-tips.md"
+ * List top-level folders under _wiki/ (excludes files and hidden entries).
  */
-function suggestWikiPath(sourceFile) {
+function getAvailableFolders(vaultPath) {
+    const wikiDir = path.join(vaultPath, "_wiki");
+    if (!fs.existsSync(wikiDir))
+        return DEFAULT_FOLDERS.map((f) => f.name);
+    const entries = fs.readdirSync(wikiDir, { withFileTypes: true });
+    const dirs = entries
+        .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+        .map((e) => e.name);
+    return dirs.length > 0 ? dirs : DEFAULT_FOLDERS.map((f) => f.name);
+}
+/**
+ * Suggest a wiki path from the source file path.
+ * Tries to map the source's parent folder name to an existing _wiki/ folder.
+ * Falls back to the first available folder (usually "topics" in a default vault).
+ */
+function suggestWikiPath(sourceFile, availableFolders) {
     const base = path.basename(sourceFile, ".md");
-    return `_wiki/concepts/${base}.md`;
+    const sourceFolder = path.basename(path.dirname(sourceFile)).toLowerCase();
+    // Direct match: source folder name exists in _wiki/
+    if (availableFolders.includes(sourceFolder)) {
+        return `_wiki/${sourceFolder}/${base}.md`;
+    }
+    // Fallback: prefer "topics" if present, otherwise first available folder
+    const fallback = availableFolders.includes("topics")
+        ? "topics"
+        : availableFolders[0] ?? "topics";
+    return `_wiki/${fallback}/${base}.md`;
 }
 /**
  * Build a draft frontmatter block for the LLM to fill in.
@@ -140,7 +164,8 @@ export function registerWikiImport(server, ctx) {
         const searchQuery = contentForSearch.slice(0, 500) + " " + (args.tags ?? []).join(" ");
         const candidates = ctx.bm25Index.search(searchQuery, ctx.config.bm25TopK);
         // Determine suggested wiki path
-        const suggestedPath = args.suggested_wiki_path ?? suggestWikiPath(absSourcePath);
+        const availableFolders = getAvailableFolders(vaultPath);
+        const suggestedPath = args.suggested_wiki_path ?? suggestWikiPath(absSourcePath, availableFolders);
         // Check if target path already exists
         const targetAbs = path.resolve(vaultPath, suggestedPath);
         const targetExists = fs.existsSync(targetAbs);
@@ -172,6 +197,7 @@ export function registerWikiImport(server, ctx) {
                         already_wiki_format: alreadyWikiFormat,
                         // Where to write
                         suggested_wiki_path: suggestedPath,
+                        available_folders: availableFolders,
                         target_exists: targetExists,
                         existing_page_path: targetRelPath,
                         // Related pages already in wiki

@@ -14,6 +14,7 @@ export interface Bm25Index {
     addDoc(row: IndexRow): void;
     removeDoc(filePath: string): void;
     rebuild(rows: IndexRow[]): void;
+    getRow(filePath: string): IndexRow | undefined;
 }
 /** Parse _index.md → array of IndexRow */
 export declare function parseIndexFile(content: string): IndexRow[];
@@ -27,3 +28,9 @@ export declare function readIndexRows(vaultPath: string): IndexRow[];
 export declare function upsertIndexRow(vaultPath: string, newRow: IndexRow): void;
 /** Build in-memory BM25 index from rows */
 export declare function buildBm25Index(vaultPath: string): Promise<Bm25Index>;
+/**
+ * Validate _index.md against actual _wiki/ pages.
+ * If out of sync (missing entries or orphaned entries), rebuild automatically.
+ * Returns true if a rebuild was performed.
+ */
+export declare function validateAndRebuildIndex(vaultPath: string, bm25Index: Bm25Index): boolean;
