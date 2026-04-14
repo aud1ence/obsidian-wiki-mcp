@@ -16,10 +16,21 @@ luôn tìm được            — BM25 index rebuild sau mỗi lần ghi
 
 ## Bắt đầu nhanh
 
-**1. Thêm vào Claude Code:**
+**1. Thêm vào AI client của bạn:**
 
+**Claude Code**
 ```bash
 claude mcp add obsidian-wiki -- npx -y obsidian-wiki-mcp --vault "/path/to/your/vault"
+```
+
+**Kiro CLI**
+```bash
+kiro mcp add obsidian-wiki -- npx -y obsidian-wiki-mcp --vault "/path/to/your/vault"
+```
+
+**OpenAI Codex CLI**
+```bash
+codex --mcp-config '{"obsidian-wiki":{"command":"npx","args":["-y","obsidian-wiki-mcp","--vault","/path/to/your/vault"]}}'
 ```
 
 > Đường dẫn có khoảng trắng phải được bọc trong ngoặc kép. Xem [Cấu hình](docs/configuration.md) để biết tất cả tùy chọn cài đặt.
@@ -45,7 +56,7 @@ Tài liệu chi tiết được viết bằng tiếng Anh tại thư mục [`doc
 
 | Tài liệu | Nội dung |
 |----------|---------|
-| [Getting Started](docs/getting-started.md) | Setup lần đầu, vault có sẵn, CLAUDE.md |
+| [Getting Started](docs/getting-started.md) | Setup lần đầu, vault có sẵn, CLAUDE.md / AGENTS.md |
 | [Vault Structure](docs/structure.md) | Cấu trúc thư mục, định dạng page, tags, đặt tên |
 | [Tools Reference](docs/tools.md) | Tất cả MCP tools với tham số và ví dụ |
 | [Workflows](docs/workflows.md) | Các pattern sử dụng phổ biến |
