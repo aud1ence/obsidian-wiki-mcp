@@ -88,13 +88,24 @@ export function registerWikiIngest(
       }
 
       const chunks = chunkContent(content);
-      const isMultiChunk = chunks.length > 1;
-      const searchChunk = chunks[0];
 
-      const results = ctx.bm25Index.search(
-        searchChunk + " " + tags.join(" "),
-        ctx.config.bm25TopK
-      );
+      // STEP 2: Run BM25 search on each chunk independently, aggregate candidates
+      const candidateMap = new Map<string, { path: string; tldr: string; score: number }>();
+      for (const chunk of chunks) {
+        const chunkResults = ctx.bm25Index.search(
+          chunk + " " + tags.join(" "),
+          ctx.config.bm25TopK
+        );
+        for (const r of chunkResults) {
+          const existing = candidateMap.get(r.path);
+          if (!existing || r.score > existing.score) {
+            candidateMap.set(r.path, r);
+          }
+        }
+      }
+      const results = Array.from(candidateMap.values())
+        .sort((a, b) => b.score - a.score)
+        .slice(0, ctx.config.bm25TopK);
 
       const schemaExcerpt = getSchemaExcerpt(vaultPath);
 
@@ -122,12 +133,6 @@ export function registerWikiIngest(
             ? "No existing pages found. Create a new page with wiki_write_page."
             : "Review candidates above. Call wiki_read_page(path, 'full') for pages to update, then wiki_write_page to save.",
       };
-
-      if (isMultiChunk) {
-        response.chunks = chunks.length;
-        response.chunk_note = `Content divided into ${chunks.length} chunks. This is context for chunk 1/${chunks.length}.`;
-        response.remaining_chunks = chunks.slice(1);
-      }
 
       return {
         content: [
