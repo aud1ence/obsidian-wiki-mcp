@@ -1,4 +1,4 @@
-# obsidian-wiki-mcp
+# Obsidian wiki MCP
 
 MCP server implementing [Karpathy's LLM Wiki pattern](https://x.com/karpathy/status/1863099529009164779) for Obsidian vaults.
 
