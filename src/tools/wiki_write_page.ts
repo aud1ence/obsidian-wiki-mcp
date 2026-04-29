@@ -10,6 +10,7 @@ import {
   isVaultInitialized,
   relPath,
 } from "../lib/vault.js";
+import { buildUnifiedDiff } from "../lib/unified_diff.js";
 import { appendLog } from "../lib/log_manager.js";
 
 export function registerWikiWritePage(
@@ -64,6 +65,7 @@ export function registerWikiWritePage(
       }
 
       const isNew = !fs.existsSync(absPath);
+      const beforeContent = isNew ? null : fs.readFileSync(absPath, "utf-8");
 
       let parsed: matter.GrayMatterFile<string>;
       try {
@@ -146,6 +148,7 @@ export function registerWikiWritePage(
                 status: "success",
                 action: isNew ? "created" : "updated",
                 path: rel,
+                diff: beforeContent === null ? null : buildUnifiedDiff(beforeContent, finalContent),
               },
               null,
               2

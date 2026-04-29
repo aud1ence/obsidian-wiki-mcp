@@ -7,6 +7,7 @@ import { Bm25Index } from "../lib/index_manager.js";
 import { BacklinkIndex, extractWikiLinks } from "../lib/backlink_index.js";
 import { validateVaultPath, writePageSafe } from "../lib/vault.js";
 import { appendLog } from "../lib/log_manager.js";
+import { buildUnifiedDiff } from "../lib/unified_diff.js";
 import { lastLintIssues, type IssueType, type LintIssue } from "./wiki_lint_scan.js";
 
 export function registerWikiApplyFix(
@@ -199,6 +200,7 @@ async function handleStale(
           status: "fixed",
           issue_id: issue.id,
           changes: [{ path: pagePath, summary: `Set dirty=false, last_modified=${today}` }],
+          diff: buildUnifiedDiff(content, newContent),
         }),
       },
     ],
@@ -292,6 +294,7 @@ async function handleBrokenLink(
             status: "fixed",
             issue_id: issue.id,
             changes: [{ path: pagePath, summary: "Removed broken wikilinks, replaced with plain text" }],
+            diff: buildUnifiedDiff(content, newContent),
           }),
         },
       ],
