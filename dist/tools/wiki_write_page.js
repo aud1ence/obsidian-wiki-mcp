@@ -3,6 +3,7 @@ import matter from "gray-matter";
 import { z } from "zod";
 import { upsertIndexRow } from "../lib/index_manager.js";
 import { validateVaultPath, writePageSafe, isVaultInitialized, relPath, } from "../lib/vault.js";
+import { buildUnifiedDiff } from "../lib/unified_diff.js";
 import { appendLog } from "../lib/log_manager.js";
 export function registerWikiWritePage(server, ctx) {
     server.registerTool("wiki_write_page", {
@@ -48,6 +49,7 @@ export function registerWikiWritePage(server, ctx) {
             };
         }
         const isNew = !fs.existsSync(absPath);
+        const beforeContent = isNew ? null : fs.readFileSync(absPath, "utf-8");
         let parsed;
         try {
             parsed = matter(args.content);
@@ -120,6 +122,7 @@ export function registerWikiWritePage(server, ctx) {
                         status: "success",
                         action: isNew ? "created" : "updated",
                         path: rel,
+                        diff: beforeContent === null ? null : buildUnifiedDiff(beforeContent, finalContent),
                     }, null, 2),
                 },
             ],

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { extractWikiLinks } from "../lib/backlink_index.js";
 import { validateVaultPath, writePageSafe } from "../lib/vault.js";
 import { appendLog } from "../lib/log_manager.js";
+import { buildUnifiedDiff } from "../lib/unified_diff.js";
 import { lastLintIssues } from "./wiki_lint_scan.js";
 export function registerWikiApplyFix(server, ctx) {
     server.registerTool("wiki_apply_fix", {
@@ -169,6 +170,7 @@ async function handleStale(issue, vaultPath, ctx) {
                     status: "fixed",
                     issue_id: issue.id,
                     changes: [{ path: pagePath, summary: `Set dirty=false, last_modified=${today}` }],
+                    diff: buildUnifiedDiff(content, newContent),
                 }),
             },
         ],
@@ -248,6 +250,7 @@ async function handleBrokenLink(issue, vaultPath, resolution, ctx) {
                         status: "fixed",
                         issue_id: issue.id,
                         changes: [{ path: pagePath, summary: "Removed broken wikilinks, replaced with plain text" }],
+                        diff: buildUnifiedDiff(content, newContent),
                     }),
                 },
             ],
