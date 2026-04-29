@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-04-29
+
+### Added
+- `wiki_write_page` now returns a `diff` field (unified diff) when updating an existing page, giving hosts direct visibility into before/after changes.
+- `wiki_apply_fix` now returns a `diff` field for write paths in `STALE` and `BROKEN_LINK` (`remove`) resolutions.
+- New `unified_diff` helper added to generate compact before/after hunk output for tool responses.
+
 ## [0.1.2] - 2026-04-14
 
 ### Added
