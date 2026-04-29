@@ -48,3 +48,13 @@
 - Do not manually edit `dist/`; regenerate via `npm run build`.
 - Preserve stable MCP tool output shapes unless intentionally versioning a breaking change.
 - Follow `/Users/macbook/.codex/RTK.md`: prefix shell commands with `rtk` (for example, `rtk rg --files`).
+
+## Release Checklist
+
+- Start from updated `master` after merge: `rtk git checkout master && rtk git pull origin master`.
+- Update `CHANGELOG.md` with version/date and user-visible changes.
+- If tool output contracts change, update `README.md` and `docs/tools.md` in the same release PR.
+- Run validation: `rtk npm run build && rtk npm test`.
+- Bump version with npm (updates `package.json` and `package-lock.json`): `rtk npm version patch|minor|major`.
+- Push commit and tag: `rtk git push origin master && rtk git push origin <tag>`.
+- Publish GitHub release: `rtk gh release create <tag> --generate-notes`.

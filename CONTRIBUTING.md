@@ -92,3 +92,15 @@ chore: add CI workflow
 - [ ] New behaviour has test coverage
 - [ ] Tool contract changes are documented
 - [ ] PR description includes `Closes #<issue>` if applicable
+
+## Release workflow
+
+Use this when publishing a new version:
+
+1. Ensure target PRs are merged, then sync local `master`.
+2. Update `CHANGELOG.md` for the new version and release date.
+3. If API/tool response shape changed, update `README.md` and `docs/tools.md`.
+4. Run checks: `npm run build` and `npm test`.
+5. Bump semver with `npm version patch|minor|major` (this updates `package.json` and `package-lock.json`, creates a commit and tag).
+6. Push commit and tag to origin.
+7. Create GitHub Release from the new tag.
