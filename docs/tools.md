@@ -93,6 +93,11 @@ Write a page to the vault. Called by the LLM after deciding on content and path.
 - Creates intermediate sub-directories
 - Acquires a `.lock` file to prevent write conflicts
 
+**Response notes:**
+- `status`, `action`, `path` as before.
+- `diff` contains a unified diff string when an existing page is updated.
+- For newly created pages, `diff` is `null`.
+
 ---
 
 ## `wiki_lint_scan`
@@ -131,6 +136,11 @@ Apply a fix for an issue detected by `wiki_lint_scan`.
 | `MISSING_TLDR` | Returns page content so LLM can add the section, then call `wiki_write_page` |
 | `BROKEN_LINK`  | If no `resolution`: returns `needs_clarification`. With `resolution="remove"`: strips the broken link, leaves plain text |
 | `ORPHAN`       | Returns content + suggestion to add backlinks from related pages |
+
+**Response notes:**
+- For write paths, `diff` is included as a unified diff:
+- `STALE` fix includes `diff` for frontmatter updates.
+- `BROKEN_LINK` with `resolution="remove"` includes `diff` for body link rewrites.
 
 ---
 

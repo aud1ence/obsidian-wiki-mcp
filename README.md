@@ -61,6 +61,10 @@ Use wiki_query to find information about [topic]
 | [Configuration](docs/configuration.md) | Claude Code setup, server config file |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues and fixes |
 
+Recent tool contract update:
+- `wiki_write_page` and `wiki_apply_fix` now include a `diff` field (unified diff) in write responses where applicable.
+- See [Tools Reference](docs/tools.md) for exact behavior by tool/action.
+
 ---
 
 ## License

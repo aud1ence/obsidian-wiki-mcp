@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-29
+
+### Changed
+- Documentation synchronized with tool contract updates from `v0.1.3`.
+- `README.md` now notes unified diff support in write responses.
+- `docs/tools.md` now documents `diff` response behavior for `wiki_write_page` and `wiki_apply_fix`.
+
 ## [0.1.3] - 2026-04-29
 
 ### Added
